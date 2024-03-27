@@ -1,0 +1,13 @@
+package net.amentum.niomedic.expediente.persistence;
+
+import net.amentum.niomedic.expediente.model.DatosClinicos;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
+
+import javax.validation.constraints.NotNull;
+
+@Repository
+public interface DatosClinicosRepository extends JpaRepository<DatosClinicos, Long>, JpaSpecificationExecutor {
+    DatosClinicos findByIdPaciente(@NotNull String idPaciente) throws Exception;
+}
