@@ -55,7 +55,7 @@ public class VacunacionServiceImpl implements VacunacionService {
             throw hcge;
         }
     }
-
+    DEFAULT 'nextval('hc_vacunacion_id_vacunacion_seq'::regclass)'
     @Override
     public VacunacionView getVacunacion(Long idHistoriaClinica) throws HistoriaClinicaGeneralException {
         return null;
