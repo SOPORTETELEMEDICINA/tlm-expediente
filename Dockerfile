@@ -26,7 +26,7 @@ ADD target/nio-expediente-1.0.10-SNAPSHOT.jar app.jar
 ENV JAVA_OPTS="-Duser.timezone=America/Mexico_City"
 ENV JRE_KEYSTORE=$JAVA_HOME/jre/lib/security/cacerts
 ENV CER_DIR=$JAVA_HOME/jre/lib/security/STAR_telemedicina_lat.crt
-RUN keytool -import -alias ece.telemedicina.lat -storepass changeit -noprompt -keystore $JRE_KEYSTORE -trustcacerts -file $CER_DIR
+RUN keytool -import -alias cct.telemedicina.lat -storepass changeit -noprompt -keystore $JRE_KEYSTORE -trustcacerts -file $CER_DIR
 # SECCION PARA PRODUCCION TERMINA
 
 RUN apk --update add fontconfig ttf-dejavu
