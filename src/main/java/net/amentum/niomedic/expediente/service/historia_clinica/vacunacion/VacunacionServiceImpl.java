@@ -55,12 +55,12 @@ public class VacunacionServiceImpl implements VacunacionService {
             throw hcge;
         }
     }
-    DEFAULT 'nextval('hc_vacunacion_id_vacunacion_seq'::regclass)'
+   // DEFAULT 'nextval('hc_vacunacion_id_vacunacion_seq'::regclass)'
     @Override
     public VacunacionView getVacunacion(Long idHistoriaClinica) throws HistoriaClinicaGeneralException {
-        return null;
-        /*try {
-            Vacunacion entity = repository.findByIdHistoriaClinica(idHistoriaClinica);
+        //eturn null;
+        try {
+            Vacunacion entity = (Vacunacion) repository.findByIdHistoriaClinica(idHistoriaClinica);
             if(entity == null) {
                 HistoriaClinicaGeneralException hcge = new HistoriaClinicaGeneralException("Error al obtener vacunación", HistoriaClinicaGeneralException.LAYER_DAO, HistoriaClinicaGeneralException.ACTION_SELECT);
                 hcge.addError("Vacunación no registrada para la historia clínica " + idHistoriaClinica);
@@ -75,7 +75,7 @@ public class VacunacionServiceImpl implements VacunacionService {
             hcge.addError(ex.getCause().getMessage());
             ex.printStackTrace();
             throw hcge;
-        }*/
+        }
     }
 
     @Override

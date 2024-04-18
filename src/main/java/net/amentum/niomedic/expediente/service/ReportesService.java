@@ -1,9 +1,10 @@
 package net.amentum.niomedic.expediente.service;
 
 import net.amentum.niomedic.expediente.exception.ConsultaException;
+import org.springframework.stereotype.Service;
 
 import java.util.UUID;
-
+@Service
 public interface ReportesService {
 
    String getSolicitudServicios(Long idConsulta) throws ConsultaException;

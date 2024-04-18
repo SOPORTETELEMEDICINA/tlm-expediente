@@ -47,12 +47,14 @@ public class ReportesServiceImpl implements ReportesService {
    private ObjectMapper mapp = new ObjectMapper();
    private ApiConfiguration apiConfiguration;
 
-   @Value("${reportes.historiaClinica:/reportes/HistoriaClinica.jrxml}")
+   @Value("${reportes.historiaClinica:../reportes/HistoriaClinica.jrxml}")
    private String reporteHistoriaClinica;
 
-   // Sre22052020 Agrego nueva variable de ambiente para Reporte a usar de receta con default
    @Value("${reportes.receta:/reportes/Receta.jrxml}")
    private String reportesReceta;
+
+   // Más adelante en tu código...
+   //InputStream jrxmlArchivo = getClass().getResourceAsStream("${reportes.receta}");
    
    // Sre24062020 Agrego nueva variable de ambiente para Reporte a usar de nota evol con default
    @Value("${reportes.notaevol:/reportes/NotasEvolucion.jrxml}")
@@ -1207,6 +1209,9 @@ public class ReportesServiceImpl implements ReportesService {
       }
    }
 
+
+
+
    @Override
    public String getReceta(Long idConsulta, Long idGroup) throws ConsultaException {
       log.info("getReceta(): recibo idConsulta {} - idGroup: {}", idConsulta, idGroup);
@@ -1226,15 +1231,31 @@ public class ReportesServiceImpl implements ReportesService {
          try {
             String diagnosticos = "";
             List<Padecimiento> padecimientosList = padecimientoRepository.findAllByIdPaciente(consulta.getIdPaciente().toString());
-            if(padecimientosList.isEmpty())
+            if (!padecimientosList.isEmpty()) {
+               logger.info("Padecimientos para agregar - {}", padecimientosList);
+               for (Padecimiento padecimiento : padecimientosList) {
+                  diagnosticos += padecimiento.getNombrePadecimiento() + ", ";
+               }
+               if (diagnosticos.endsWith(", ")) {
+                  diagnosticos = diagnosticos.substring(0, diagnosticos.length() - 2);
+                  parametros.put("txtDiagnostico", diagnosticos);
+               }
+            } else {
+               diagnosticos = "No especificados";
+            }
+
+            /* if(padecimientosList.isEmpty())
                diagnosticos = "No especificados";
             else {
                logger.info("Padecimientos para agregar - {}", padecimientosList);
                for (Padecimiento padecimiento : padecimientosList)
                   diagnosticos += padecimiento.getNombrePadecimiento() + ", ";
             }
-            diagnosticos = diagnosticos.substring(0, diagnosticos.length() - ", ".length());
-            parametros.put("txtDiagnostico", diagnosticos);
+            if (diagnosticos.endsWith(", ")) {
+               diagnosticos = diagnosticos.substring(0, diagnosticos.length() - 2);
+            }
+            //diagnosticos = diagnosticos.substring(0, diagnosticos.length() - ", ".length());
+            parametros.put("txtDiagnostico", diagnosticos);*/
          } catch (Exception ex) {
             parametros.put("txtDiagnostico", "No especificados");
          }
@@ -1319,6 +1340,35 @@ public class ReportesServiceImpl implements ReportesService {
                detalleReceta.forEach((deta) -> {
                   try {
                      LinkedHashMap tempo = (LinkedHashMap) deta;
+                     StringBuilder detalles = new StringBuilder(tempo.get("presentacion") == null ? "-" : removeSpaces(tempo.get("presentacion").toString()));
+                     ArrayList sustancias = (ArrayList) tempo.get("substancias");
+                     if (sustancias != null) {
+                        for (Object sustancia : sustancias) {
+                           LinkedHashMap temp = (LinkedHashMap) sustancia;
+                           detalles.append(temp.get("Description") == null ? "-" : removeSpaces(temp.get("Description").toString())).append(", ");
+                        }
+                     }
+                     if (detalles.toString().endsWith(", ")) {
+                        detalles = new StringBuilder(detalles.substring(0, detalles.length() - 2));
+                     }
+                     Medicamento item = new Medicamento();
+                     item.setNombreComercial(tempo.get("denominacionGenerica") == null ? "-" : removeSpaces(tempo.get("denominacionGenerica").toString()));
+                     item.setDetalles(detalles.toString());
+                     item.setDosis(tempo.get("dosis") == null ? "-" : removeSpaces(tempo.get("dosis").toString()));
+                     item.setUnidad(tempo.get("unidad") == null ? "-" : removeSpaces(tempo.get("unidad").toString()));
+                     item.setVia(tempo.get("viaAdministracion") == null ? "-" : removeSpaces(tempo.get("viaAdministracion").toString()));
+                     item.setFrecuencia(tempo.get("frecuencia") == null ? "-" : removeSpaces(tempo.get("frecuencia").toString()) + " HORAS");
+                     item.setPeriodo(tempo.get("periodo") == null ? "-" : removeSpaces(tempo.get("periodo").toString()));
+                     item.setRecomendaciones(tempo.get("indicacionesMedicas") == null ? "-" : removeSpaces(tempo.get("indicacionesMedicas").toString()));
+                     medicamentoList.add(item);
+                     logger.info("Objeto deta - {}", deta);
+                     logger.info("Objeto medicamento - {}", item);
+                  } catch (Exception ex) {
+                     logger.error("Error - {}", ex.getMessage());
+                  }
+
+                  /*try {
+                     LinkedHashMap tempo = (LinkedHashMap) deta;
                      String detalles = tempo.get("presentacion") == null ? "-" : removeSpaces(tempo.get("presentacion").toString());
                      ArrayList sustancias = (ArrayList) tempo.get("substancias");
                      if(sustancias != null) {
@@ -1342,7 +1392,7 @@ public class ReportesServiceImpl implements ReportesService {
                      logger.info("Objeto medicamento - {}", item);
                   } catch(Exception ex) {
                      logger.error("Error - {}", ex.getMessage());
-                  }
+                  }*/
                });
             } else {
                Medicamento item = new Medicamento();
@@ -1364,7 +1414,9 @@ public class ReportesServiceImpl implements ReportesService {
 
          JRBeanCollectionDataSource itemsJRBean = new JRBeanCollectionDataSource(medicamentoList);
          parametros.put("CollectionBeanParam", itemsJRBean);
-         InputStream jrxmlArchivo = getClass().getResourceAsStream(reportesReceta);
+         //InputStream jrxmlArchivo = getClass().getClassLoader().getResourceAsStream(reportesReceta);
+         InputStream jrxmlArchivo = getClass().getResourceAsStream("/reportes/Receta.jrxml");
+         //InputStream jrxmlArchivo = "/" + getClass().getResourceAsStream(reportesReceta);
          JasperReport jasperArchivo = JasperCompileManager.compileReport(jrxmlArchivo);
          byte[] byteReporte = JasperRunManager.runReportToPdf(jasperArchivo, parametros, new JREmptyDataSource());
          byte[] codificado = Base64.encodeBase64(byteReporte);
@@ -1398,6 +1450,198 @@ public class ReportesServiceImpl implements ReportesService {
          throw consE;
       }
    }
+
+//   @Override
+//   public String getReceta(Long idConsulta, Long idGroup) throws ConsultaException {
+//      log.info("getReceta(): recibo idConsulta {} - idGroup: {}", idConsulta, idGroup);
+//      try {
+//         Consulta consulta = consultaRepository.findByIdConsulta(idConsulta);
+//         if (consulta == null) {
+//            ConsultaException consE = new ConsultaException("No se encuentra en el sistema Consulta.", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
+//            consE.addError("No existe la Consulta con el Id:" + idConsulta);
+//            throw consE;
+//         }
+//
+//         Map<String, Object> parametros = new HashMap<>();
+//         parametros.put("datFechaCreacion", consulta.getFechaCrecion());
+//         parametros.put("txtNombre", (consulta.getNombrePaciente() == null) ? "" : consulta.getNombrePaciente());
+//         logger.info("Objecto consulta - {}", consulta);
+//
+//         try {
+//            String diagnosticos = "";
+//            List<Padecimiento> padecimientosList = padecimientoRepository.findAllByIdPaciente(consulta.getIdPaciente().toString());
+//            if(padecimientosList.isEmpty())
+//               diagnosticos = "No especificados";
+//            else {
+//               logger.info("Padecimientos para agregar - {}", padecimientosList);
+//               for (Padecimiento padecimiento : padecimientosList)
+//                  diagnosticos += padecimiento.getNombrePadecimiento() + ", ";
+//            }
+//            diagnosticos = diagnosticos.substring(0, diagnosticos.length() - ", ".length());
+//            parametros.put("txtDiagnostico", diagnosticos);
+//         } catch (Exception ex) {
+//            parametros.put("txtDiagnostico", "No especificados");
+//         }
+//
+//         try {
+//            Map<String, Object> medico = apiConfiguration.getMedicoByid(consulta.getIdMedico().toString());
+//            logger.info("Objecto medico - {}", medico);
+//            Calendar calendar = Calendar.getInstance();
+//            calendar.setTime(consulta.getFechaCrecion());
+//            calendar.add(Calendar.DAY_OF_YEAR, 3);
+//            parametros.put("datFechaVigencia", calendar.getTime());
+//            parametros.put("datFechaConsulta", consulta.getFechaConsulta());
+//            parametros.put("txtNombreMedico", (consulta.getNombreMedico() == null) ? "No registrada" : consulta.getNombreMedico());
+//            parametros.put("txtRFC", (medico.get("curp") == null) ? "No registrada" : medico.get("curp"));
+//            parametros.put("txtDR", (medico.get("sexo") == null) ? "No registrada" :
+//                    (medico.get("sexo").toString().equalsIgnoreCase("hombre") ? "DR. " : "DRA. "));
+//
+//            ArrayList especialidad = (ArrayList) medico.get("especialidadViewList");
+//            if (especialidad != null && !especialidad.isEmpty()) {
+//               Map<String, Object> esp = mapp.convertValue(especialidad.get(0), Map.class);
+//               parametros.put("txtCedulaMedico", esp.get("cedula"));
+//               String especialidadTxt = (esp.get("especialidad") == null ? "" : (String) esp.get("especialidad"));
+//               String universidadTxt = (esp.get("universidad") == null ? "" : (String) esp.get("universidad"));
+//               parametros.put("txtEspecialidad", especialidadTxt);
+//               parametros.put("txtInstitucion", universidadTxt);
+//            }
+//
+//         } catch (Exception ex) {
+//            parametros.put("txtNombreUM", "");
+//            parametros.put("txtDireccionUM", "");
+//            parametros.put("txtLicSanitariaUM", "");
+//            parametros.put("txtNombreMedico", "");
+//            parametros.put("txtCedulaMedico", "");
+//            parametros.put("datFechaImpre", new Date());
+//            parametros.put("txtEspecialidad", "");
+//            parametros.put("txtUniversidad", "");
+//            parametros.put("txtDireccionMedico", "");
+//         }
+//
+//         try {
+//            Map<String, Object> paciente = apiConfiguration.getPacieteByid(consulta.getIdPaciente().toString());
+//            logger.info("Objecto paciente - {}", paciente);
+//            parametros.put("txtSexo", ((String) paciente.get("sexo")) == null ? "" : (String) paciente.get("sexo"));
+//            Integer numExpe = ((Integer) paciente.get("numeroExpediente") == null) ? 0 : (Integer) paciente.get("numeroExpediente");
+//            parametros.put("txtExpediente", numExpe + "");
+//            parametros.put("txtExpedienteHis", (consulta.getReferencia2() == null) ? "" : consulta.getReferencia2());
+//            parametros.put("txtCurp", ((String) paciente.get("curp")) == null ? "" : (String) paciente.get("curp"));
+//
+//            try {
+//               Date fechaNac = new Date((Long) paciente.get("fechaNacimiento"));
+//               parametros.put("datFechaNac", fechaNac);
+//
+//               Date today = new Date();
+//               Instant instant = Instant.ofEpochMilli(today.getTime());
+//               LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+//               LocalDate localDate = localDateTime.toLocalDate();
+//
+//               Instant instant2 = Instant.ofEpochMilli(fechaNac.getTime());
+//               LocalDateTime localDateTime2 = LocalDateTime.ofInstant(instant2, ZoneId.systemDefault());
+//               LocalDate localDate2 = localDateTime2.toLocalDate();
+//
+//               Integer edad = Period.between(localDate2, localDate).getYears();
+//               parametros.put("txtEdad", edad + " años");
+//
+//            } catch (Exception ex) {
+//               parametros.put("datFechaNac", null);
+//               parametros.put("txtEdad", 0 + " años");
+//            }
+//
+//         } catch (Exception ex) {
+//            parametros.put("txtSexo", "");
+//            parametros.put("txtExpediente", "");
+//         }
+//
+//         List<Medicamento> medicamentoList = new ArrayList<>();
+//         try {
+//            Map<String, Object> receta = apiConfiguration.getRecetaByidConsulta(consulta.getIdConsulta());
+//            logger.info("Objeto receta - {}", receta);
+//            parametros.put("txtFolio", (receta.get("numeroFolio") == null) ? "" : String.valueOf(receta.get("numeroFolio")));
+//            ArrayList detalleReceta = (ArrayList) receta.get("detalleRecetaViewList");
+//            if (detalleReceta != null && !detalleReceta.isEmpty()) {
+//               detalleReceta.forEach((deta) -> {
+//                  try {
+//                     LinkedHashMap tempo = (LinkedHashMap) deta;
+//                     String detalles = tempo.get("presentacion") == null ? "-" : removeSpaces(tempo.get("presentacion").toString());
+//                     ArrayList sustancias = (ArrayList) tempo.get("substancias");
+//                     if(sustancias != null) {
+//                        for (Object sustancia : sustancias) {
+//                           LinkedHashMap temp = (LinkedHashMap) sustancia;
+//                           detalles += temp.get("Description") == null ? "-" : removeSpaces(temp.get("Description").toString() + ", ");
+//                        }
+//                     }
+//                     detalles = detalles.substring(0, detalles.length() - ", ".length());
+//                     Medicamento item = new Medicamento();
+//                     item.setNombreComercial(tempo.get("denominacionGenerica") == null ? "-" : removeSpaces(tempo.get("denominacionGenerica").toString()));
+//                     item.setDetalles(detalles);
+//                     item.setDosis(tempo.get("dosis") == null ? "-" : removeSpaces(tempo.get("dosis").toString()));
+//                     item.setUnidad(tempo.get("unidad") == null ? "-" : removeSpaces(tempo.get("unidad").toString()));
+//                     item.setVia(tempo.get("viaAdministracion") == null ? "-" : removeSpaces(tempo.get("viaAdministracion").toString()));
+//                     item.setFrecuencia(tempo.get("frecuencia") == null ? "-" : removeSpaces(tempo.get("frecuencia").toString()) + " HORAS");
+//                     item.setPeriodo(tempo.get("periodo") == null ? "-" : removeSpaces(tempo.get("periodo").toString()));
+//                     item.setRecomendaciones(tempo.get("indicacionesMedicas") == null ? "-" : removeSpaces(tempo.get("indicacionesMedicas").toString()));
+//                     medicamentoList.add(item);
+//                     logger.info("Objeto deta - {}", deta);
+//                     logger.info("Objeto medicamento - {}", item);
+//                  } catch(Exception ex) {
+//                     logger.error("Error - {}", ex.getMessage());
+//                  }
+//               });
+//            } else {
+//               Medicamento item = new Medicamento();
+//               item.setNombreComercial("No encontrado");
+//               medicamentoList.add(item);
+//            }
+//         } catch (Exception ex) {
+//            Medicamento item = new Medicamento();
+//            item.setNombreComercial("Error al buscar medicamentos");
+//            medicamentoList.add(item);
+//         }
+//
+//         try {
+//            Map<String, Object> grupo = apiConfiguration.getGrupoById(idGroup);
+//            parametros.put("txtImage", String.valueOf(grupo.get("imagen")));
+//         } catch (Exception e) {
+//            parametros.put("imagen", null);
+//         }
+//
+//         JRBeanCollectionDataSource itemsJRBean = new JRBeanCollectionDataSource(medicamentoList);
+//         parametros.put("CollectionBeanParam", itemsJRBean);
+//         InputStream jrxmlArchivo = getClass().getResourceAsStream(reportesReceta);
+//         JasperReport jasperArchivo = JasperCompileManager.compileReport(jrxmlArchivo);
+//         byte[] byteReporte = JasperRunManager.runReportToPdf(jasperArchivo, parametros, new JREmptyDataSource());
+//         byte[] codificado = Base64.encodeBase64(byteReporte);
+//         String pdfFile = IOUtils.toString(codificado, "UTF-8");
+//         return pdfFile;
+//      } catch (ConsultaException consE) {
+//         throw consE;
+//      } catch (DataIntegrityViolationException dive) {
+//         ConsultaException consE = new ConsultaException("No fue posible editar Consulta", ConsultaException.LAYER_DAO, ConsultaException.ACTION_SELECT);
+//         consE.addError("No fue posible obtener detalles Consulta");
+//         log.error("Error al obtener detalles Consulta - CODE {} - {}", consE.getExceptionCode(), idConsulta, consE);
+//         throw consE;
+//      } catch (JRException jreE) {
+//         ConsultaException consE = new ConsultaException("No se pudo construir el reporte", ConsultaException.LAYER_DAO, ConsultaException.ACTION_SELECT);
+////         log.error("Error al obtener detalles Consulta - CODE {} - {}", consE.getExceptionCode(), idConsulta, consE); //tira TODA la exception
+//         if (jreE.getMessage().contains("java.net.MalformedURLException")) {
+//            log.error("===>>>No existe el archivo jrxml");
+//            consE.addError("No existe el archivo jrxml");
+//         } else {
+//            log.error("===>>>{}", jreE.getMessage());
+//            consE.addError("" + jreE.getMessage());
+//         }
+//         jreE.printStackTrace();
+//         throw consE;
+//      } catch (Exception ex) {
+//         ConsultaException consE = new ConsultaException("Error inesperado al obtener detalles Consulta", ConsultaException.LAYER_DAO, ConsultaException.ACTION_SELECT);
+//         consE.addError("Ocurrió un error al obtener detalles Consulta");
+//         log.error("Error al obtener detalles Consulta - CODE {} - {}", consE.getExceptionCode(), idConsulta, consE);
+//         log.error(ex.getMessage());
+//         ex.printStackTrace();
+//         throw consE;
+//      }
+//   }
 
    private String removeSpaces(String cad) {
       return cad.replace("\n", "").replace("\r", "");

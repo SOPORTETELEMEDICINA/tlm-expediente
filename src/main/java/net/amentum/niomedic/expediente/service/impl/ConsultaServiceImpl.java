@@ -535,9 +535,9 @@ public class ConsultaServiceImpl implements ConsultaService {
 								logger.warn("Error al convertir fechas", ex);
 							}
 						}
-						if (idUsuario != null && !idUsuario.isEmpty()) {
-							tc = (tc != null ? cb.and(tc, usuario.in(idUsuario)) : usuario.in(idUsuario));
-						}
+						//if (idUsuario != null && !idUsuario.isEmpty()) {
+						//	tc = (tc != null ? cb.and(tc, usuario.in(idUsuario)) : usuario.in(idUsuario));
+						//}
 						if (idStatusConsulta != null && !idStatusConsulta.isEmpty()) {
 
 							tc = (tc != null ? cb.and(tc, estadoConsulta.in(idStatusConsulta)) : estadoConsulta.in(idStatusConsulta));
