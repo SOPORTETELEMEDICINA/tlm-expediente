@@ -1272,6 +1272,9 @@ public class ReportesServiceImpl implements ReportesService {
             parametros.put("txtRFC", (medico.get("curp") == null) ? "No registrada" : medico.get("curp"));
             parametros.put("txtDR", (medico.get("sexo") == null) ? "No registrada" :
                     (medico.get("sexo").toString().equalsIgnoreCase("hombre") ? "DR. " : "DRA. "));
+            parametros.put("txtCorreoMedico", (medico.get("email") == null) ? "No registrada" : medico.get("email"));
+            parametros.put("txtTelefonoMedico", (medico.get("telefonoFijo") == null) ? "No registrada" : medico.get("telefonoFijo"));
+
 
             ArrayList especialidad = (ArrayList) medico.get("especialidadViewList");
             if (especialidad != null && !especialidad.isEmpty()) {
@@ -1281,6 +1284,7 @@ public class ReportesServiceImpl implements ReportesService {
                String universidadTxt = (esp.get("universidad") == null ? "" : (String) esp.get("universidad"));
                parametros.put("txtEspecialidad", especialidadTxt);
                parametros.put("txtInstitucion", universidadTxt);
+               parametros.put("txtFooter", "cct.telemedicina.lat");
             }
 
          } catch (Exception ex) {
@@ -1293,6 +1297,7 @@ public class ReportesServiceImpl implements ReportesService {
             parametros.put("txtEspecialidad", "");
             parametros.put("txtUniversidad", "");
             parametros.put("txtDireccionMedico", "");
+            parametros.put("txtFooter", "cct.telemedicina.lat");
          }
 
          try {
@@ -1411,6 +1416,20 @@ public class ReportesServiceImpl implements ReportesService {
          } catch (Exception e) {
             parametros.put("imagen", null);
          }
+
+         List<Map<String, Object>> tratamientosReporte = new ArrayList<>();
+         try {
+            Map<String, Object> itemPlan = new HashMap<>();
+            itemPlan.put("txtPlan", (consulta.getPlanTerapeutico() == null) ? "" : consulta.getPlanTerapeutico());
+            tratamientosReporte.add(itemPlan);
+         } catch (Exception ex) {
+            Map<String, Object> itemPlan = new HashMap<>();
+            itemPlan.put("txtPlan", "N/A");
+            tratamientosReporte.add(itemPlan);
+         }
+
+         JRBeanCollectionDataSource itemsJRBeanTratamiento = new JRBeanCollectionDataSource(tratamientosReporte);
+         parametros.put("CollectionBeanParamTratamiento", itemsJRBeanTratamiento);
 
          JRBeanCollectionDataSource itemsJRBean = new JRBeanCollectionDataSource(medicamentoList);
          parametros.put("CollectionBeanParam", itemsJRBean);
