@@ -153,7 +153,7 @@
 				<textFieldExpression><![CDATA[$P{txtFolio}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="470" y="54" width="103" height="14" uuid="d555b1b6-be15-4fe6-839c-918403a4102c">
+				<reportElement x="470" y="55" width="103" height="14" uuid="d555b1b6-be15-4fe6-839c-918403a4102c">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>

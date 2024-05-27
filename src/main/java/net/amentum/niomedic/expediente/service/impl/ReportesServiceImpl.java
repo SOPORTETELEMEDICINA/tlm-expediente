@@ -1260,11 +1260,9 @@ public class ReportesServiceImpl implements ReportesService {
             //diagnosticos = diagnosticos.substring(0, diagnosticos.length() - ", ".length());
             parametros.put("txtDiagnostico", diagnosticos);*/
          } catch (Exception ex) {
-            /*
             ConsultaException consE = new ConsultaException("No se pudo construir el reporte, debes especificar un diagnostico primero.", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
             consE.addError("No se pudo construir el reporte, debes especificar un diagnostico primero");
             throw consE;
-             */
          }
 
          try {
