@@ -1223,13 +1223,14 @@ public class ReportesServiceImpl implements ReportesService {
             throw consE;
          }
 
+         String diagnosticos = "";
          Map<String, Object> parametros = new HashMap<>();
          parametros.put("datFechaCreacion", consulta.getFechaCrecion());
          parametros.put("txtNombre", (consulta.getNombrePaciente() == null) ? "" : consulta.getNombrePaciente());
          logger.info("Objecto consulta - {}", consulta);
 
          try {
-            String diagnosticos = "";
+
             List<Padecimiento> padecimientosList = padecimientoRepository.findAllByIdPaciente(consulta.getIdPaciente().toString());
             if (!padecimientosList.isEmpty()) {
                logger.info("Padecimientos para agregar - {}", padecimientosList);
@@ -1241,7 +1242,9 @@ public class ReportesServiceImpl implements ReportesService {
                   parametros.put("txtDiagnostico", diagnosticos);
                }
             } else {
-               diagnosticos = "No especificados";
+               ConsultaException consE = new ConsultaException("No se pudo construir el reporte, debes especificar un diagnostico primero.", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
+               consE.addError("No se pudo construir el reporte, debes especificar un diagnostico primero");
+               throw consE;
             }
 
             /* if(padecimientosList.isEmpty())
@@ -1257,7 +1260,11 @@ public class ReportesServiceImpl implements ReportesService {
             //diagnosticos = diagnosticos.substring(0, diagnosticos.length() - ", ".length());
             parametros.put("txtDiagnostico", diagnosticos);*/
          } catch (Exception ex) {
-            parametros.put("txtDiagnostico", "No especificados");
+            /*
+            ConsultaException consE = new ConsultaException("No se pudo construir el reporte, debes especificar un diagnostico primero.", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
+            consE.addError("No se pudo construir el reporte, debes especificar un diagnostico primero");
+            throw consE;
+             */
          }
 
          try {
@@ -1413,6 +1420,7 @@ public class ReportesServiceImpl implements ReportesService {
          try {
             Map<String, Object> grupo = apiConfiguration.getGrupoById(idGroup);
             parametros.put("txtImage", String.valueOf(grupo.get("imagen")));
+            parametros.put("txtImageFirma", String.valueOf(grupo.get("imagen")));
          } catch (Exception e) {
             parametros.put("imagen", null);
          }
