@@ -1418,7 +1418,7 @@ public class ReportesServiceImpl implements ReportesService {
          try {
             Map<String, Object> grupo = apiConfiguration.getGrupoById(idGroup);
             parametros.put("txtImage", String.valueOf(grupo.get("imagen")));
-            parametros.put("txtImageFirma", String.valueOf(grupo.get("imagen")));
+            parametros.put("txtImageFirma", null);
          } catch (Exception e) {
             parametros.put("imagen", null);
          }
