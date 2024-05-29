@@ -1245,6 +1245,7 @@ public class ReportesServiceImpl implements ReportesService {
                ConsultaException consE = new ConsultaException("No se pudo construir el reporte, debes especificar un diagnostico primero.", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
                consE.addError("No se pudo construir el reporte, debes especificar un diagnostico primero");
                throw consE;
+//               parametros.put("txtDiagnostico", diagnosticos);
             }
 
             /* if(padecimientosList.isEmpty())
@@ -1263,6 +1264,7 @@ public class ReportesServiceImpl implements ReportesService {
             ConsultaException consE = new ConsultaException("No se pudo construir el reporte, debes especificar un diagnostico primero.", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
             consE.addError("No se pudo construir el reporte, debes especificar un diagnostico primero");
             throw consE;
+//            parametros.put("txtDiagnostico", diagnosticos);
          }
 
          try {

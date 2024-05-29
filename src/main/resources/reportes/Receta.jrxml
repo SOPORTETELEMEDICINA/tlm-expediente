@@ -468,30 +468,6 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$P{txtExpediente}]]></textFieldExpression>
 			</textField>
-			<line>
-				<reportElement x="110" y="140" width="299" height="1" uuid="4ef1ea5c-68fd-4e50-b00d-00bfb57da992">
-					<property name="com.jaspersoft.studio.unit.width" value="px"/>
-				</reportElement>
-			</line>
-			<line>
-				<reportElement x="110" y="120" width="299" height="1" uuid="11759d32-5c3a-4336-bde1-cfdc8e91266b"/>
-			</line>
-			<line>
-				<reportElement x="473" y="120" width="97" height="1" uuid="a388da09-c0a5-45b5-9f50-714278645ca3">
-					<property name="com.jaspersoft.studio.unit.width" value="px"/>
-				</reportElement>
-			</line>
-			<line>
-				<reportElement x="460" y="68" width="111" height="1" uuid="7e75cc3b-1674-4a00-90ac-bbed5e1898eb">
-					<property name="com.jaspersoft.studio.unit.width" value="px"/>
-				</reportElement>
-			</line>
-			<line>
-				<reportElement x="460" y="54" width="111" height="1" uuid="23a4909f-da01-40f6-9912-26ad26cc79a7"/>
-			</line>
-			<line>
-				<reportElement x="473" y="140" width="97" height="1" uuid="216afcf4-f785-423d-80f7-fb427caa000c"/>
-			</line>
 		</band>
 	</title>
 	<pageHeader>
