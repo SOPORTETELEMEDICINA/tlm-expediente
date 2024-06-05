@@ -440,9 +440,11 @@ public class ReportesServiceImpl implements ReportesService {
 
          try {
             Map<String, Object> medico = apiConfiguration.getMedicoByid(consulta.getIdMedico().toString());
+
             if (medico.get("idUnidadMedica") != null) {
                Long idUnidadMedica = ((Integer) medico.get("idUnidadMedica")).longValue();
                Map<String, Object> unidadMedica = apiConfiguration.getUnidadMeicaByid(idUnidadMedica);
+               log.info("UM(): UM UM {}", unidadMedica);
 
                String nombreTipologia = ((String) unidadMedica.get("nombreTipologia")) == null ? "" : (String) unidadMedica.get("nombreTipologia");
                String nombreUnidad = ((String) unidadMedica.get("nombreUnidad")) == null ? "" : (String) unidadMedica.get("nombreUnidad");
@@ -453,40 +455,48 @@ public class ReportesServiceImpl implements ReportesService {
                String numeroExterior = ((String) unidadMedica.get("numeroExterior")) == null ? "" : (String) unidadMedica.get("numeroExterior");
                String cp = ((String) unidadMedica.get("codigoPostal")) == null ? "" : (String) unidadMedica.get("codigoPostal");
                String nombreJurisdiccion = ((String) unidadMedica.get("nombreJurisdiccion")) == null ? "" : (String) unidadMedica.get("nombreJurisdiccion");
+               String nombreEntidad = ((String) unidadMedica.get("nombreEntidad")) == null ? "" : (String) unidadMedica.get("nombreEntidad");
 
-               String direccion = vialidad + " " + numeroExterior + " C.P. " + cp + " " + nombreJurisdiccion + ", CHIAPAS";
-   //               (String) unidadMedica.get("fkEntidad");
+
+               String direccion = vialidad + " " + numeroExterior + " C.P. " + cp + " " + nombreJurisdiccion + " " + nombreEntidad;
                parametros.put("txtDireccionUM", direccion);
                parametros.put("txtLicSanitariaUM", ((String) unidadMedica.get("numeroLicenciaSanitaria")) == null ? "Licencia Sanitaria:" : "Licencia Sanitaria: " + (String) unidadMedica.get("numeroLicenciaSanitaria"));
             }
-            parametros.put("txtNombreMedico", (consulta.getNombreMedico() == null) ? "" : consulta.getNombreMedico());
+
+            //! THIS
+            parametros.put("txtNombreMedico", (consulta.getNombreMedico() == null) ? "No registrada" : consulta.getNombreMedico());
+            parametros.put("txtDR", (medico.get("sexo") == null) ? "No registrada" :
+                    (medico.get("sexo").toString().equalsIgnoreCase("hombre") ? "DR. " : "DRA. "));
+            //! THIS.END
+
             ArrayList especialidad = (ArrayList) medico.get("especialidadViewList");
             if (especialidad != null && !especialidad.isEmpty()) {
                Map<String, Object> esp = mapp.convertValue(especialidad.get(0), Map.class);
                parametros.put("txtCedulaMedico", "CED. PROF. " + (String) esp.get("cedula"));
                // Inicio GGR20200709 datos medico agrego Universidad y Especialidad
-               String especialidadTxt = (esp.get("especialidad") == null ? "" : (String) esp.get("especialidad"));
-               String universidadTxt = (esp.get("universidad") == null ? "" : (String) esp.get("universidad"));
+               String especialidadTxt = (esp.get("especialidad") == null ? "N/A" : (String) esp.get("especialidad"));
+               String universidadTxt = (esp.get("universidad") == null ? "N/A" : (String) esp.get("universidad"));
                parametros.put("txtEspecialidadMedico", especialidadTxt);
                parametros.put("txtUniversidadMedico", universidadTxt);
                // Fin GGR20200709 datos medico
             }
+
             // Inicio GGR20200709 datos domicilio medico agrego Universidad y Especialidad, y horario de atención
             agregaDatosMedico(medico, parametros);
             // Fin GGR20200709 datos domicilio
             parametros.put("datFechaImpre", new Date());
 
          } catch (Exception ex) {
-            parametros.put("txtNombreUM", "");
-            parametros.put("txtDireccionUM", "");
-            parametros.put("txtLicSanitariaUM", "");
-            parametros.put("txtNombreMedico", "");
-            parametros.put("txtCedulaMedico", "");
+            parametros.put("txtNombreUM", "N/A");
+            parametros.put("txtDireccionUM", "N/A");
+            parametros.put("txtLicSanitariaUM", "N/A");
+            parametros.put("txtNombreMedico", "N/A");
+            parametros.put("txtCedulaMedico", "N/A");
             parametros.put("datFechaImpre", new Date());
             // Inicio GGR20200709 Datos adicionales del medico
-            parametros.put("txtEspecialidadMedico", "");
-            parametros.put("txtUniversidadMedico", "");
-            parametros.put("txtDireccionMedico", "");
+            parametros.put("txtEspecialidadMedico", "N/A");
+            parametros.put("txtUniversidadMedico", "N/A");
+            parametros.put("txtDireccionMedico", "N/A");
             // Fin GGR20200709 Datos adicionales del medico
 
          }
@@ -686,8 +696,8 @@ public class ReportesServiceImpl implements ReportesService {
          }
          // Fin GGR20200619
          // Sre24062020 Inicia Dejo configurable el reporte a usar
-         //InputStream jrxmlArchivo = getClass().getResourceAsStream("/reportes/NotasMedicasPrescr.jrxml");
-         InputStream jrxmlArchivo = getClass().getResourceAsStream(reportesNotamedica);
+         InputStream jrxmlArchivo = getClass().getResourceAsStream("/reportes/NotasMedicasPrescr.jrxml");
+//         InputStream jrxmlArchivo = getClass().getResourceAsStream(reportesNotamedica);
          // Sre24062020 Termina
          JasperReport jasperArchivo = JasperCompileManager.compileReport(jrxmlArchivo);
          byte[] byteReporte = JasperRunManager.runReportToPdf(jasperArchivo, parametros, new JREmptyDataSource());
@@ -1242,10 +1252,10 @@ public class ReportesServiceImpl implements ReportesService {
                   parametros.put("txtDiagnostico", diagnosticos);
                }
             } else {
-               ConsultaException consE = new ConsultaException("No se pudo construir el reporte, debes especificar un diagnostico primero.", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
-               consE.addError("No se pudo construir el reporte, debes especificar un diagnostico primero");
-               throw consE;
-//               parametros.put("txtDiagnostico", diagnosticos);
+//               ConsultaException consE = new ConsultaException("No se pudo construir el reporte, debes especificar un diagnostico primero.", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
+//               consE.addError("No se pudo construir el reporte, debes especificar un diagnostico primero");
+//               throw consE;
+               parametros.put("txtDiagnostico", diagnosticos);
             }
 
             /* if(padecimientosList.isEmpty())
@@ -1261,10 +1271,10 @@ public class ReportesServiceImpl implements ReportesService {
             //diagnosticos = diagnosticos.substring(0, diagnosticos.length() - ", ".length());
             parametros.put("txtDiagnostico", diagnosticos);*/
          } catch (Exception ex) {
-            ConsultaException consE = new ConsultaException("No se pudo construir el reporte, debes especificar un diagnostico primero.", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
-            consE.addError("No se pudo construir el reporte, debes especificar un diagnostico primero");
-            throw consE;
-//            parametros.put("txtDiagnostico", diagnosticos);
+//            ConsultaException consE = new ConsultaException("No se pudo construir el reporte, debes especificar un diagnostico primero.", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
+//            consE.addError("No se pudo construir el reporte, debes especificar un diagnostico primero");
+//            throw consE;
+            parametros.put("txtDiagnostico", diagnosticos);
          }
 
          try {
