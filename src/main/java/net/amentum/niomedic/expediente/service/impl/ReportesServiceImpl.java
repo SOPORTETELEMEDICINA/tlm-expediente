@@ -6,15 +6,12 @@ import lombok.extern.slf4j.Slf4j;
 import net.amentum.niomedic.expediente.beanReports.Medicamento;
 import net.amentum.niomedic.expediente.configuration.ApiConfiguration;
 import net.amentum.niomedic.expediente.converter.ConsultaConverter;
-import net.amentum.niomedic.expediente.converter.UserSignatureConverter;
 import net.amentum.niomedic.expediente.exception.ConsultaException;
 import net.amentum.niomedic.expediente.model.Consulta;
 import net.amentum.niomedic.expediente.model.Padecimiento;
 import net.amentum.niomedic.expediente.model.Tratamiento;
-import net.amentum.niomedic.expediente.model.UserSignature;
 import net.amentum.niomedic.expediente.persistence.ConsultaRepository;
 import net.amentum.niomedic.expediente.persistence.PadecimientoRepository;
-import net.amentum.niomedic.expediente.persistence.UserSignatureRepository;
 import net.amentum.niomedic.expediente.service.ReportesService;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
@@ -50,10 +47,6 @@ public class ReportesServiceImpl implements ReportesService {
    private ObjectMapper mapp = new ObjectMapper();
    private ApiConfiguration apiConfiguration;
 
-   private UserSignatureRepository userSignatureRepository;
-
-   private UserSignatureConverter userSignatureConverter;
-
    @Value("${reportes.historiaClinica:../reportes/HistoriaClinica.jrxml}")
    private String reporteHistoriaClinica;
 
@@ -88,12 +81,6 @@ public class ReportesServiceImpl implements ReportesService {
    public void setApiConfiguration(ApiConfiguration apiConfiguration) {
       this.apiConfiguration = apiConfiguration;
    }
-
-   @Autowired
-   public void setUserSignatureRepository(UserSignatureRepository userSignatureRepository) { this.userSignatureRepository = userSignatureRepository; }
-
-   @Autowired
-   public void setUserSignatureConverter(UserSignatureConverter userSignatureConverter) { this.userSignatureConverter = userSignatureConverter; }
 
    @Override
 //   public String getSolicitudServicios(Long idConsulta) throws ConsultaException, JRException, IOException {
@@ -1443,16 +1430,19 @@ public class ReportesServiceImpl implements ReportesService {
          try {
             Map<String, Object> grupo = apiConfiguration.getGrupoById(idGroup);
 
-            UserSignature exitsUserSignature = userSignatureRepository.findByUserAppId(consulta.getIdUsuario());
-
             parametros.put("txtImage", String.valueOf(grupo.get("imagen")));
 
-            if (exitsUserSignature != null) {
-               parametros.put("txtImageFirma", userSignatureConverter.toStringFromByte(exitsUserSignature.getImageContent()));
+            Map<String, Object> medico = apiConfiguration.getMedicoByid(consulta.getIdMedico().toString());
+            log.info("Objeto de medico: {}", medico);
+
+            if (medico.get("id_medico_firma") != null) {
+               Map<String, Object> firma = apiConfiguration.getMedicoFirmaByIdFirma((String) medico.get("id_medico_firma"));
+               log.info("Firma del medico {}", firma);
+
+               parametros.put("txtImageFirma", firma.get("contenido"));
             }
          } catch (Exception e) {
-            parametros.put("txtImage", null);
-            parametros.put("txtImageFirma", null);
+            parametros.put("imagen", null);
          }
 
          List<Map<String, Object>> tratamientosReporte = new ArrayList<>();

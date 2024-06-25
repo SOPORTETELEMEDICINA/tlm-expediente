@@ -880,4 +880,60 @@ public class ApiConfiguration {
          throw consE;
       }
    }
+
+   public Map<String, Object> getMedicoFirmaByIdFirma(String idFirma) throws ConsultaException {
+      try {
+         URL url = new URL(urlProperti + "medicos/firma/" + idFirma);
+
+         Integer contador = 0;
+         Boolean ciclo = true;
+         do {
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setDoOutput(true);
+            conn.setRequestMethod("GET");
+
+            Map<String, Object> infoTocken = obtenerToken();
+            token = "bearer " + (String) infoTocken.get("access_token");
+            conn.setRequestProperty("Authorization", token);
+            if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+               BufferedReader br = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
+               StringBuilder response = new StringBuilder();
+               String currentLine;
+               while ((currentLine = br.readLine()) != null) {
+                  response.append(currentLine);
+               }
+               br.close();
+               response.toString();
+               contador++;
+               ciclo = true;
+               if (contador > 3) {
+                  ConsultaException consE = new ConsultaException("Ocurrio un error en la configuraion de los reportes", ConsultaException.LAYER_DAO, ConsultaException.ACTION_SELECT);
+                  consE.addError("No se pudo obtener información de la firma del médico");
+                  log.info("getMedicoFirmaByIdFirma() - Ocurrio un error en obtener información de la firma del médico - error: {}", response.toString());
+                  throw consE;
+               }
+            } else {
+               log.info("getMedicoFirmaByIdFirma() - Se obtuvo información de la firma del medico exitosamente");
+               ciclo = false;
+               BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+               StringBuilder response = new StringBuilder();
+               String currentLine;
+               while ((currentLine = br.readLine()) != null) {
+                  response.append(currentLine);
+               }
+               br.close();
+               Map<String, Object> JsonResponse = mapp.readValue(response.toString(), Map.class);
+               return JsonResponse;
+            }
+         } while (ciclo);
+         return null;
+      } catch (ConsultaException ce) {
+         throw ce;
+      } catch (Exception e) {
+         ConsultaException consE = new ConsultaException("Ocurrio un error inesperado en la configuraion de los reportes", ConsultaException.LAYER_DAO, ConsultaException.ACTION_SELECT);
+         consE.addError("No se pudo obtener información de la firma del médico");
+         log.info("getMedicoFirmaByIdFirma() - Ocurrio un error en obtener información de la firma del médico - error: {}", e);
+         throw consE;
+      }
+   }
 }
