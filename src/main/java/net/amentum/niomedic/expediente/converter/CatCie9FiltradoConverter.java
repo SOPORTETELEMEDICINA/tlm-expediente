@@ -19,6 +19,10 @@ public class CatCie9FiltradoConverter {
       catCie9FiltradoView.setIdCie9(catCie9.getIdCie9());
       catCie9FiltradoView.setCatalogKey(catCie9.getCatalogKey());
       catCie9FiltradoView.setProNombre(catCie9.getProNombre());
+      catCie9FiltradoView.setProCveEdfa(catCie9.getProCveEdfa());
+      catCie9FiltradoView.setProCveEdia(catCie9.getProCveEdia());
+      catCie9FiltradoView.setProEdadFa(catCie9.getProEdadFa());
+      catCie9FiltradoView.setProEdadIa(catCie9.getProEdadIa());
       catCie9FiltradoView.setProcedimientoType(catCie9.getProcedimientoType());
       catCie9FiltradoView.setActivo(catCie9.getActivo());
 

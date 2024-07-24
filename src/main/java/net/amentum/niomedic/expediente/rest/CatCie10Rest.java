@@ -55,7 +55,9 @@ public class CatCie10Rest extends RestBaseController {
                                                        @RequestParam(required = false, defaultValue = "0") Integer page,
                                                        @RequestParam(required = false, defaultValue = "10") Integer size,
                                                        @RequestParam(required = false, defaultValue = "nombre") String orderColumn,
-                                                       @RequestParam(required = false, defaultValue = "asc") String orderType) throws CatCie10Exception {
+                                                       @RequestParam(required = false, defaultValue = "asc") String orderType,
+                                                       @RequestParam(required = false, defaultValue = "") String sexo,
+                                                       @RequestParam(required = false, defaultValue = "0") Integer edad) throws CatCie10Exception {
 
       log.info("===>>>getCatCie10Search(): datosBusqueda: {} - activo: {} - page: {} - size: {} - orderColumn: {} - orderType: {}",
          datosBusqueda, activo, page, size, orderColumn, orderType);
@@ -70,7 +72,7 @@ public class CatCie10Rest extends RestBaseController {
          size = 10;
       }
 
-      return catCie10Service.getCatCie10Search(datosBusqueda, activo, page, size, orderColumn, orderType);
+      return catCie10Service.getCatCie10Search(datosBusqueda, activo, page, size, orderColumn, orderType, sexo, edad);
    }
 
    @RequestMapping(method = RequestMethod.POST)

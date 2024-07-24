@@ -103,7 +103,7 @@ public class CatCie9ServiceImpl implements CatCie9Service {
    }
 
    @Override
-   public Page<CatCie9FiltradoView> getCatCie9Search(String datosBusqueda, Boolean activo, Integer page, Integer size, String orderColumn, String orderType) throws CatCie9Exception {
+   public Page<CatCie9FiltradoView> getCatCie9Search(String datosBusqueda, Boolean activo, Integer page, Integer size, String orderColumn, String orderType, String sexo, Integer edad) throws CatCie9Exception {
       try {
          log.info("===>>>getCatCie9Search(): datosBusqueda: {} - activo: {} - page: {} - size: {} - orderColumn: {} - orderType: {}",
             datosBusqueda, activo, page, size, orderColumn, orderType);
@@ -142,7 +142,15 @@ public class CatCie9ServiceImpl implements CatCie9Service {
          catCie9Page = catCie9Repository.findAll(spec, request);
 
          catCie9Page.getContent().forEach(catCie9 -> {
-            catCie9FiltradoViewList.add(catCie9FiltradoConverter.toView(catCie9, Boolean.TRUE));
+            /* Filtrado por sexo y edad */
+            if (catCie9.getSexType() == "2.0" && sexo == "MUJER" || catCie9.getSexType() == "1.0" && sexo == "HOMBRE") {
+               Integer edadMinima = Integer.parseInt(catCie9.getProEdadIa().replaceAll("[^0-9]", ""));
+               Integer edadMaxima = Integer.parseInt(catCie9.getProEdadFa().replaceAll("[^0-9]", ""));
+
+               if (edad >= edadMinima && edad <= edadMaxima) {
+                  catCie9FiltradoViewList.add(catCie9FiltradoConverter.toView(catCie9, Boolean.TRUE));
+               }
+            }
          });
 
          PageImpl<CatCie9FiltradoView> catCie9FiltradoViewPage = new PageImpl<CatCie9FiltradoView>(catCie9FiltradoViewList, request, catCie9Page.getTotalElements());

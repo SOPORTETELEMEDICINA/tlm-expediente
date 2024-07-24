@@ -103,7 +103,7 @@ public class CatCie10ServiceImpl implements CatCie10Service {
    }
 
    @Override
-   public Page<CatCie10FiltradoView> getCatCie10Search(String datosBusqueda, Boolean activo, Integer page, Integer size, String orderColumn, String orderType) throws CatCie10Exception {
+   public Page<CatCie10FiltradoView> getCatCie10Search(String datosBusqueda, Boolean activo, Integer page, Integer size, String orderColumn, String orderType, String sexo, Integer edad) throws CatCie10Exception {
       try {
          log.info("===>>>getCatCie10Search(): datosBusqueda: {} - activo: {} - page: {} - size: {} - orderColumn: {} - orderType: {}",
             datosBusqueda, activo, page, size, orderColumn, orderType);
@@ -142,7 +142,14 @@ public class CatCie10ServiceImpl implements CatCie10Service {
          catCie10Page = catCie10Repository.findAll(spec, request);
 
          catCie10Page.getContent().forEach(catCie10 -> {
-            catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));
+            if (catCie10.getLsex() == sexo) {
+               Integer edadMinima = Integer.parseInt(catCie10.getLinf().replaceAll("[^0-9]", ""));
+               Integer edadMaxima = Integer.parseInt(catCie10.getLsup().replaceAll("[^0-9]", ""));
+
+               if (edad >= edadMinima && edad <= edadMaxima) {
+                  catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));
+               }
+            }
          });
 
          PageImpl<CatCie10FiltradoView> catCie10FiltradoViewPage = new PageImpl<CatCie10FiltradoView>(catCie10FiltradoViewList, request, catCie10Page.getTotalElements());

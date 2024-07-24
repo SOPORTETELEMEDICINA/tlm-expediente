@@ -13,7 +13,7 @@ public interface CatCie10Service {
 
    List<CatCie10FiltradoView> findAll() throws CatCie10Exception;
 
-   Page<CatCie10FiltradoView> getCatCie10Search(String datosBusqueda, Boolean activo, Integer page, Integer size, String orderColumn, String orderType) throws CatCie10Exception;
+   Page<CatCie10FiltradoView> getCatCie10Search(String datosBusqueda, Boolean activo, Integer page, Integer size, String orderColumn, String orderType, String sexo, Integer edad) throws CatCie10Exception;
 
    CatCie10View createCatCie10(CatCie10View catCie9View) throws CatCie10Exception;
 

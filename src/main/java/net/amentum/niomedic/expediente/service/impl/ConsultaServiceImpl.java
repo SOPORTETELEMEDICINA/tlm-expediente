@@ -3,14 +3,12 @@ package net.amentum.niomedic.expediente.service.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import net.amentum.common.TimeUtils;
 import net.amentum.niomedic.catalogos.views.CatEstadoConsultaView;
+import net.amentum.niomedic.expediente.configuration.ApiConfiguration;
 import net.amentum.niomedic.expediente.converter.ConsultaConverter;
 import net.amentum.niomedic.expediente.converter.TratamientoConverter;
 import net.amentum.niomedic.expediente.exception.ConsultaException;
 import net.amentum.niomedic.expediente.exception.ExceptionServiceCode;
-import net.amentum.niomedic.expediente.model.CatCie10;
-import net.amentum.niomedic.expediente.model.Consulta;
-import net.amentum.niomedic.expediente.model.Padecimiento;
-import net.amentum.niomedic.expediente.model.Tratamiento;
+import net.amentum.niomedic.expediente.model.*;
 import net.amentum.niomedic.expediente.persistence.CatCie10Repository;
 import net.amentum.niomedic.expediente.persistence.CatCie9Repository;
 import net.amentum.niomedic.expediente.persistence.ConsultaRepository;
@@ -18,10 +16,7 @@ import net.amentum.niomedic.expediente.persistence.PadecimientoRepository;
 import net.amentum.niomedic.expediente.persistence.TratamientoRepository;
 import net.amentum.niomedic.expediente.rest.ConsultaRest;
 import net.amentum.niomedic.expediente.service.ConsultaService;
-import net.amentum.niomedic.expediente.views.ConsultaView;
-import net.amentum.niomedic.expediente.views.PadecimientoView;
-import net.amentum.niomedic.expediente.views.SignosVitalesView;
-import net.amentum.niomedic.expediente.views.TratamientoView;
+import net.amentum.niomedic.expediente.views.*;
 import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +34,9 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import java.text.Normalizer;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -67,6 +65,8 @@ public class ConsultaServiceImpl implements ConsultaService {
 	private CatCie9Repository catCie9Repository;
 	private TratamientoConverter tratamientoConverter;
 	private TratamientoRepository tratamientoRepository;
+
+	private ApiConfiguration apiConfiguration;
 
 	{
 		colOrderNames.put("idPaciente", "idPaciente");
@@ -134,6 +134,11 @@ public class ConsultaServiceImpl implements ConsultaService {
 	@Autowired
 	public void setCatCie10Repository(CatCie10Repository catCie10Repository) {
 		this.catCie10Repository = catCie10Repository;
+	}
+
+	@Autowired
+	public void setApiConfiguration(ApiConfiguration apiConfiguration) {
+		this.apiConfiguration = apiConfiguration;
 	}
 
 	@Transactional(readOnly = false, rollbackFor = {ConsultaException.class})
@@ -750,6 +755,21 @@ public class ConsultaServiceImpl implements ConsultaService {
 			ConsultaException ee;
 			ArrayList<PadecimientoView> temp = new ArrayList<>();
 			Consulta encontrado = consultaRepository.findByIdConsulta(idConsulta);
+
+			Map<String, Object> paciente = apiConfiguration.getPacieteByid(encontrado.getIdPaciente().toString());
+
+			String fechaNacimiento = (String) paciente.get("fechaNacimiento");
+
+			DateTimeFormatter f = DateTimeFormatter.ofPattern( "yyyy-MM-dd");
+			LocalDate fechaNacimientoParsed = LocalDate.parse( fechaNacimiento , f );
+
+			LocalDate currentDate = LocalDate.now();
+
+			Period periodBetween = Period.between(fechaNacimientoParsed, currentDate);
+
+			int pacienteAnios = periodBetween.getYears();
+			String pacienteSexo = (String) paciente.get("sexo");
+
 			if (encontrado != null) {
 				if (encontrado.getIdEstadoConsulta() != 2) {
 					ee = new ConsultaException("No se pudo cambiar el estado de la consulta", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
@@ -763,17 +783,53 @@ public class ConsultaServiceImpl implements ConsultaService {
 					logger.error("consultaCancel() - El idestadoConsulta para Terminar es:{}, se le quiere asginar otro estado - {}", idEstadoConsulta, consultaView.getEstadoConsulta());
 					throw ee;
 				}
+
 				consultaView.setEstadoConsulta(estadoConsulta);
 				consultaView.setIdEstadoConsulta(idEstadoConsulta);
+
 				for (PadecimientoView padecimientoView : consultaView.getListaPadecimiento()) {
 					if (padecimientoView != null) {
 						CatCie10 catCie10 = catCie10Repository.findOne(padecimientoView.getCie10Id());
+
+						if (pacienteSexo != null && fechaNacimiento != null) {
+							if (pacienteSexo != catCie10.getLsex()) {
+								ee = new ConsultaException("Ocurrio un error al Finalizar la consulta", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
+								ee.addError("El padecimiento del paciente no coincide con el sexo del padecimiento {} " + catCie10.getNombre());
+								throw ee;
+							}
+
+							int edadMinima = 0;
+							int edadMaxima = 0;
+
+							if (catCie10.getLinf() != null) {
+								edadMinima = Integer.parseInt(catCie10.getLinf().replaceAll("[^0-9]", ""));
+							}
+
+							if (catCie10.getLsup() != null) {
+								edadMaxima = Integer.parseInt(catCie10.getLsup().replaceAll("[^0-9]", ""));
+							}
+
+							if (pacienteAnios < edadMinima) {
+								ee = new ConsultaException("Ocurrio un error al Finalizar la consulta", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
+								ee.addError("El paciente no cuenta con la edad minima para registrar el padecimiento {} " + edadMinima);
+								throw ee;
+							}
+
+							if (pacienteAnios > edadMaxima) {
+								ee = new ConsultaException("Ocurrio un error al Finalizar la consulta", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
+								ee.addError("El paciente el paciente sobrepasa la edad máxima para el padcimiento {} " + edadMaxima);
+								throw ee;
+							}
+						}
+
 						if (catCie10 == null) {
 							ee = new ConsultaException("Ocurrio un error al Finalizar la consulta", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
 							ee.addError("No existe el sistema el catCie10 con el Id " + padecimientoView.getCie10Id());
 							throw ee;
 						}
+
 						Padecimiento padecimientoEncontrado = padecimientoRepository.findByCatCie10AndIdPaciente(catCie10, consultaView.getIdPaciente() + "");
+
 						if (padecimientoEncontrado == null) {
 							padecimientoView.setConsultaId(encontrado.getIdConsulta());
 							padecimientoView.setIdPaciente(consultaView.getIdPaciente() + "");
@@ -796,6 +852,7 @@ public class ConsultaServiceImpl implements ConsultaService {
 						throw ee;
 					}
 				}
+
 				for (TratamientoView tratamientoView : consultaView.getListaTartamiento()) {
 					if (tratamientoView != null) {
 						if (!catCie9Repository.exists(tratamientoView.getCatCie9Id())) {
@@ -804,7 +861,39 @@ public class ConsultaServiceImpl implements ConsultaService {
 							throw ee;
 						}
 
-						Tratamiento tr = tratamientoRepository.findByConsultaAndCatCie9(encontrado, catCie9Repository.findOne(tratamientoView.getCatCie9Id()));
+						CatCie9 catCie9 = catCie9Repository.findOne(tratamientoView.getCatCie9Id());
+
+						if (catCie9.getSexType() == "2.0" && pacienteSexo != "MUJER" || catCie9.getSexType() == "1.0" && pacienteSexo != "HOMBRE") {
+							ee = new ConsultaException("Ocurrio un error al Finalizar la consulta", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
+							ee.addError("El sexo del tratamiento no coincide con el sexo del paciente {} " + catCie9.getProNombre());
+							throw ee;
+						}
+
+						int edadMinima = 0;
+						int edadMaxima = 0;
+
+						if (catCie9.getProEdadIa() != null) {
+							edadMinima = Integer.parseInt(catCie9.getProEdadIa().replaceAll("[^0-9]", ""));
+						}
+
+						if (catCie9.getProEdadFa() != null) {
+							edadMaxima = Integer.parseInt(catCie9.getProEdadFa().replaceAll("[^0-9]", ""));
+						}
+
+						if (pacienteAnios < edadMinima) {
+							ee = new ConsultaException("Ocurrio un error al Finalizar la consulta", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
+							ee.addError("El paciente no cuenta con la edad minima para el tratamiento {} " + edadMinima);
+							throw ee;
+						}
+
+						if (pacienteAnios > edadMaxima) {
+							ee = new ConsultaException("Ocurrio un error al Finalizar la consulta", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
+							ee.addError("El paciente el paciente sobrepasa la edad máxima para el tratamiento {} " + edadMaxima);
+							throw ee;
+						}
+
+						Tratamiento tr = tratamientoRepository.findByConsultaAndCatCie9(encontrado, catCie9);
+
 						if (tr == null) {
 							tratamientoView.setConsultaId(encontrado.getIdConsulta());
 							tr = tratamientoConverter.toEntity(tratamientoView, new Tratamiento());
