@@ -153,7 +153,7 @@ public class PadecimientoConverter {
       padecimientoView.setFechaAlta(padecimiento.getFechaAlta());
       padecimientoView.setPresuntivo(padecimiento.getPresuntivo());
       padecimientoView.setIdMedicoTratante(padecimiento.getIdMedicoTratante());
-      padecimientoView.setCie10Id(padecimiento.getCatCie10().getIdCie10());
+      padecimientoView.setCie10Id(padecimiento.getCatCie10() != null ? padecimiento.getCatCie10().getIdCie10() : null);
 
       padecimientoView.setEstatus(padecimiento.getEstatus());
       padecimientoView.setNombreMedicoTratante(padecimiento.getNombreMedicoTratante());
