@@ -142,11 +142,28 @@ public class CatCie10ServiceImpl implements CatCie10Service {
          catCie10Page = catCie10Repository.findAll(spec, request);
 
          catCie10Page.getContent().forEach(catCie10 -> {
-            if (catCie10.getLsex() == sexo) {
-               Integer edadMinima = Integer.parseInt(catCie10.getLinf().replaceAll("[^0-9]", ""));
-               Integer edadMaxima = Integer.parseInt(catCie10.getLsup().replaceAll("[^0-9]", ""));
+            if(sexo != "" && catCie10.getLsex() != null) {
+               if (catCie10.getLsex() == sexo) {
+                  if( edad != 0) {
+                     Integer edadMinima = Integer.parseInt(catCie10.getLinf().replaceAll("[^0-9]", ""));
+                     Integer edadMaxima = Integer.parseInt(catCie10.getLsup().replaceAll("[^0-9]", ""));
 
-               if (edad >= edadMinima && edad <= edadMaxima) {
+                     if (edad >= edadMinima && edad <= edadMaxima) {
+                        catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));
+                     }
+                  } else {
+                     catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));
+                  }
+               }
+            } else {
+               if( edad != 0) {
+                  Integer edadMinima = Integer.parseInt(catCie10.getLinf().replaceAll("[^0-9]", ""));
+                  Integer edadMaxima = Integer.parseInt(catCie10.getLsup().replaceAll("[^0-9]", ""));
+
+                  if (edad >= edadMinima && edad <= edadMaxima) {
+                     catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));
+                  }
+               } else {
                   catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));
                }
             }

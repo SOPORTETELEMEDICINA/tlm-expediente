@@ -143,14 +143,32 @@ public class CatCie9ServiceImpl implements CatCie9Service {
 
          catCie9Page.getContent().forEach(catCie9 -> {
             /* Filtrado por sexo y edad */
-            if (catCie9.getSexType() == "2.0" && sexo == "MUJER" || catCie9.getSexType() == "1.0" && sexo == "HOMBRE") {
-               Integer edadMinima = Integer.parseInt(catCie9.getProEdadIa().replaceAll("[^0-9]", ""));
-               Integer edadMaxima = Integer.parseInt(catCie9.getProEdadFa().replaceAll("[^0-9]", ""));
+            if(catCie9.getSexType() != null && sexo != "") {
+               if (catCie9.getSexType() == "2.0" && sexo == "MUJER" || catCie9.getSexType() == "1.0" && sexo == "HOMBRE") {
+                  if (edad != 0) {
+                     Integer edadMinima = Integer.parseInt(catCie9.getProEdadIa().replaceAll("[^0-9]", ""));
+                     Integer edadMaxima = Integer.parseInt(catCie9.getProEdadFa().replaceAll("[^0-9]", ""));
 
-               if (edad >= edadMinima && edad <= edadMaxima) {
+                     if (edad >= edadMinima && edad <= edadMaxima) {
+                        catCie9FiltradoViewList.add(catCie9FiltradoConverter.toView(catCie9, Boolean.TRUE));
+                     }
+                  } else {
+                     catCie9FiltradoViewList.add(catCie9FiltradoConverter.toView(catCie9, Boolean.TRUE));
+                  }
+               }
+            } else {
+               if (edad != 0) {
+                  Integer edadMinima = Integer.parseInt(catCie9.getProEdadIa().replaceAll("[^0-9]", ""));
+                  Integer edadMaxima = Integer.parseInt(catCie9.getProEdadFa().replaceAll("[^0-9]", ""));
+
+                  if (edad >= edadMinima && edad <= edadMaxima) {
+                     catCie9FiltradoViewList.add(catCie9FiltradoConverter.toView(catCie9, Boolean.TRUE));
+                  }
+               } else {
                   catCie9FiltradoViewList.add(catCie9FiltradoConverter.toView(catCie9, Boolean.TRUE));
                }
             }
+
          });
 
          PageImpl<CatCie9FiltradoView> catCie9FiltradoViewPage = new PageImpl<CatCie9FiltradoView>(catCie9FiltradoViewList, request, catCie9Page.getTotalElements());
