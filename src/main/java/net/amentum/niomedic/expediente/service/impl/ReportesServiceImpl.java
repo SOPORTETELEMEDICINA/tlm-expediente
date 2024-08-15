@@ -545,23 +545,85 @@ public class ReportesServiceImpl implements ReportesService {
          try {
             Map<String, Object> signosVitales = mapp.convertValue(consulta.getSignosVitales(), Map.class);
 
-            Integer temp = ((Integer) signosVitales.get("temperatura") == null) ? 0 : (Integer) signosVitales.get("temperatura");
+            // Obtener y convertir temperatura
+            String tempStr = String.valueOf(signosVitales.get("temperatura"));
+            Integer temp = 0;
+            try {
+               temp = Integer.parseInt(tempStr);
+            } catch (NumberFormatException e) {
+               // Valor predeterminado en caso de error en la conversión
+               temp = 0;
+            }
             parametros.put("txtTemperatura", "Temp.: " + temp + " °C");
-            Integer peso = ((Integer) signosVitales.get("_peso") == null) ? 0 : (Integer) signosVitales.get("_peso");
+
+            // Obtener y convertir peso
+            String pesoStr = String.valueOf(signosVitales.get("_peso"));
+            Integer peso = 0;
+            try {
+               peso = Integer.parseInt(pesoStr);
+            } catch (NumberFormatException e) {
+               peso = 0; // Valor predeterminado en caso de error en la conversión
+            }
             parametros.put("txtPeso", "Peso: " + peso + " kg");
-            Integer talla = ((Integer) signosVitales.get("_talla") == null) ? 0 : (Integer) signosVitales.get("_talla");
+
+            // Obtener y convertir talla
+            String tallaStr = String.valueOf(signosVitales.get("_talla"));
+            Integer talla = 0;
+            try {
+               talla = Integer.parseInt(tallaStr);
+            } catch (NumberFormatException e) {
+               talla = 0; // Valor predeterminado en caso de error en la conversión
+            }
             parametros.put("txtTalla", "Talla: " + talla + " cm");
-            Double imc = ((Double) signosVitales.get("_imc") == null) ? 0.0 : (Double) signosVitales.get("_imc");
+
+            // Obtener y convertir IMC (considerando que IMC es un valor Double)
+            String imcStr = String.valueOf(signosVitales.get("_imc"));
+            Double imc = 0.0;
+            try {
+               imc = Double.parseDouble(imcStr);
+            } catch (NumberFormatException e) {
+               imc = 0.0; // Valor predeterminado en caso de error en la conversión
+            }
             parametros.put("txtImc", "IMC: " + imc);
 
             Map<String, Object> tensionArterial = mapp.convertValue(consulta.getSignosVitales().get("_tensionArterial"), Map.class);
-            Integer sistolica = ((Integer) tensionArterial.get("sistolica") == null) ? 0 : (Integer) tensionArterial.get("sistolica");
-            Integer diastolica = ((Integer) tensionArterial.get("diastolica") == null) ? 0 : (Integer) tensionArterial.get("diastolica");
+            String sistolicaStr = String.valueOf(tensionArterial.get("sistolica"));
+            Integer sistolica = 0;
+            try {
+               sistolica = Integer.parseInt(sistolicaStr);
+            } catch (NumberFormatException e) {
+               sistolica = 0; // Valor por defecto en caso de error en la conversión
+            }
+            String diastolicaStr = String.valueOf(tensionArterial.get("diastolica"));
+            Integer diastolica = 0;
+            try {
+               diastolica = Integer.parseInt(diastolicaStr);
+            } catch (NumberFormatException e) {
+               diastolica = 0; // Valor por defecto en caso de error en la conversión
+            }
             parametros.put("txtPresArte", "P.A.: " + sistolica + " / " + diastolica);
-            Integer frecCardiaca = ((Integer) signosVitales.get("frecCardiaca") == null) ? 0 : (Integer) signosVitales.get("frecCardiaca");
+
+            // Convertir y manejar frecuencia cardíaca
+            String frecCardiacaStr = String.valueOf(signosVitales.get("frecCardiaca"));
+            Integer frecCardiaca = 0;
+            try {
+               frecCardiaca = Integer.parseInt(frecCardiacaStr);
+            } catch (NumberFormatException e) {
+               frecCardiaca = 0; // Valor por defecto en caso de error en la conversión
+            }
             parametros.put("txtFrecCardiaca", "F.C.: " + frecCardiaca + " x min.");
-            Integer frecRespiratoria = ((Integer) signosVitales.get("frecRespiratoria") == null) ? 0 : (Integer) signosVitales.get("frecRespiratoria");
+
+            // Convertir y manejar frecuencia respiratoria
+            String frecRespiratoriaStr = String.valueOf(signosVitales.get("frecRespiratoria"));
+            Integer frecRespiratoria = 0;
+            try {
+               frecRespiratoria = Integer.parseInt(frecRespiratoriaStr);
+            } catch (NumberFormatException e) {
+               frecRespiratoria = 0; // Valor por defecto en caso de error en la conversión
+            }
             parametros.put("txtFrecRespiratoria", "F.R.: " + frecRespiratoria + " x min.");
+
+            // Establecer otros valores que son constantes o no necesitan conversión
             parametros.put("txtSatOxigeno", "Saturación Oxígeno: " + "N/A");
             parametros.put("txtEvn", "EVN: " + "N/A");
          } catch (Exception ex) {
@@ -1227,6 +1289,7 @@ public class ReportesServiceImpl implements ReportesService {
       log.info("getReceta(): recibo idConsulta {} - idGroup: {}", idConsulta, idGroup);
       try {
          Consulta consulta = consultaRepository.findByIdConsulta(idConsulta);
+         System.err.println(consulta);
          if (consulta == null) {
             ConsultaException consE = new ConsultaException("No se encuentra en el sistema Consulta.", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
             consE.addError("No existe la Consulta con el Id:" + idConsulta);
@@ -1239,43 +1302,58 @@ public class ReportesServiceImpl implements ReportesService {
          parametros.put("txtNombre", (consulta.getNombrePaciente() == null) ? "" : consulta.getNombrePaciente());
          logger.info("Objecto consulta - {}", consulta);
 
-         try {
-
-            List<Padecimiento> padecimientosList = padecimientoRepository.findAllByIdPaciente(consulta.getIdPaciente().toString());
-            if (!padecimientosList.isEmpty()) {
-               logger.info("Padecimientos para agregar - {}", padecimientosList);
-               for (Padecimiento padecimiento : padecimientosList) {
-                  diagnosticos += padecimiento.getNombrePadecimiento() + ", ";
-               }
-               if (diagnosticos.endsWith(", ")) {
-                  diagnosticos = diagnosticos.substring(0, diagnosticos.length() - 2);
-                  parametros.put("txtDiagnostico", diagnosticos);
-               }
+         Set<Padecimiento> padecimientos = consulta.getPadecimiento();
+         if (padecimientos != null && !padecimientos.isEmpty()) {
+            // Obtenemos el primer padecimiento o uno específico según algún criterio
+            Padecimiento padecimientoActual = padecimientos.iterator().next();
+            String nombrePadecimiento = padecimientoActual.getNombrePadecimiento();
+            if (nombrePadecimiento != null && !nombrePadecimiento.isEmpty()) {
+               parametros.put("txtDiagnostico", nombrePadecimiento);
             } else {
-//               ConsultaException consE = new ConsultaException("No se pudo construir el reporte, debes especificar un diagnostico primero.", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
-//               consE.addError("No se pudo construir el reporte, debes especificar un diagnostico primero");
-//               throw consE;
-               parametros.put("txtDiagnostico", diagnosticos);
+               parametros.put("txtDiagnostico", "Diagnóstico no especificado");
             }
-
-            /* if(padecimientosList.isEmpty())
-               diagnosticos = "No especificados";
-            else {
-               logger.info("Padecimientos para agregar - {}", padecimientosList);
-               for (Padecimiento padecimiento : padecimientosList)
-                  diagnosticos += padecimiento.getNombrePadecimiento() + ", ";
-            }
-            if (diagnosticos.endsWith(", ")) {
-               diagnosticos = diagnosticos.substring(0, diagnosticos.length() - 2);
-            }
-            //diagnosticos = diagnosticos.substring(0, diagnosticos.length() - ", ".length());
-            parametros.put("txtDiagnostico", diagnosticos);*/
-         } catch (Exception ex) {
-//            ConsultaException consE = new ConsultaException("No se pudo construir el reporte, debes especificar un diagnostico primero.", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
-//            consE.addError("No se pudo construir el reporte, debes especificar un diagnostico primero");
-//            throw consE;
-            parametros.put("txtDiagnostico", diagnosticos);
+         } else {
+            // Manejo de caso donde no hay padecimientos disponibles
+            parametros.put("txtDiagnostico", "Diagnóstico no disponible");
          }
+
+//         try {
+//
+//            List<Padecimiento> padecimientosList = padecimientoRepository.findAllByIdPaciente(consulta.getIdPaciente().toString());
+//            if (!padecimientosList.isEmpty()) {
+//               logger.info("Padecimientos para agregar - {}", padecimientosList);
+//               for (Padecimiento padecimiento : padecimientosList) {
+//                  diagnosticos += padecimiento.getNombrePadecimiento() + ", ";
+//               }
+//               if (diagnosticos.endsWith(", ")) {
+//                  diagnosticos = diagnosticos.substring(0, diagnosticos.length() - 2);
+//                  parametros.put("txtDiagnostico", diagnosticos);
+//               }
+//            } else {
+////               ConsultaException consE = new ConsultaException("No se pudo construir el reporte, debes especificar un diagnostico primero.", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
+////               consE.addError("No se pudo construir el reporte, debes especificar un diagnostico primero");
+////               throw consE;
+//               parametros.put("txtDiagnostico", diagnosticos);
+//            }
+//
+//            /* if(padecimientosList.isEmpty())
+//               diagnosticos = "No especificados";
+//            else {
+//               logger.info("Padecimientos para agregar - {}", padecimientosList);
+//               for (Padecimiento padecimiento : padecimientosList)
+//                  diagnosticos += padecimiento.getNombrePadecimiento() + ", ";
+//            }
+//            if (diagnosticos.endsWith(", ")) {
+//               diagnosticos = diagnosticos.substring(0, diagnosticos.length() - 2);
+//            }
+//            //diagnosticos = diagnosticos.substring(0, diagnosticos.length() - ", ".length());
+//            parametros.put("txtDiagnostico", diagnosticos);*/
+//         } catch (Exception ex) {
+////            ConsultaException consE = new ConsultaException("No se pudo construir el reporte, debes especificar un diagnostico primero.", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
+////            consE.addError("No se pudo construir el reporte, debes especificar un diagnostico primero");
+////            throw consE;
+//            parametros.put("txtDiagnostico", diagnosticos);
+//         }
 
          try {
             Map<String, Object> medico = apiConfiguration.getMedicoByid(consulta.getIdMedico().toString());
