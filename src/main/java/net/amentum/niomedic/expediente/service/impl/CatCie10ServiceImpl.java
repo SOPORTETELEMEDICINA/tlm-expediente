@@ -24,10 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.criteria.Predicate;
 import java.text.Normalizer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @Service
@@ -102,6 +99,16 @@ public class CatCie10ServiceImpl implements CatCie10Service {
       }
    }
 
+   private int convertirEdad(String edadConUnidad) {
+      if (edadConUnidad.endsWith("A")) {
+         return Integer.parseInt(edadConUnidad.replaceAll("[^0-9]", "")); // Ya es un valor en años
+      } else if (edadConUnidad.endsWith("M") || edadConUnidad.endsWith("D") || edadConUnidad.endsWith("H")) {
+         return 1; // Redondear a 1 año para cualquier valor en meses, días o horas
+      } else {
+         throw new IllegalArgumentException("Unidad de edad desconocida: " + edadConUnidad);
+      }
+   }
+
    @Override
    public Page<CatCie10FiltradoView> getCatCie10Search(String datosBusqueda, Boolean activo, Integer page, Integer size, String orderColumn, String orderType, String sexo, Integer edad) throws CatCie10Exception {
       try {
@@ -141,12 +148,19 @@ public class CatCie10ServiceImpl implements CatCie10Service {
          log.info("===>>>getCatCie10Page() - realizando la búsqueda");
          catCie10Page = catCie10Repository.findAll(spec, request);
 
+         System.err.println("Error: " + catCie10Page.getTotalElements());
+
          catCie10Page.getContent().forEach(catCie10 -> {
-            if(sexo != "" && catCie10.getLsex() != null) {
-               if (catCie10.getLsex() == sexo) {
-                  if( edad != 0) {
-                     Integer edadMinima = Integer.parseInt(catCie10.getLinf().replaceAll("[^0-9]", ""));
-                     Integer edadMaxima = Integer.parseInt(catCie10.getLsup().replaceAll("[^0-9]", ""));
+            if(!Objects.equals(sexo, "")) {
+               System.err.println("If sexo " + sexo + "," + catCie10.getLsex());
+               if (Objects.equals(catCie10.getLsex(), sexo)) {
+                  System.err.println("If edad " + edad);
+                  if(edad != 0) {
+                     int edadMinima = convertirEdad(catCie10.getLinf());
+                     int edadMaxima = convertirEdad(catCie10.getLsup());
+
+                     System.err.println("edad Minima2: " + edadMinima);
+                     System.err.println("edad Maxima2: " + edadMaxima);
 
                      if (edad >= edadMinima && edad <= edadMaxima) {
                         catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));
@@ -156,9 +170,12 @@ public class CatCie10ServiceImpl implements CatCie10Service {
                   }
                }
             } else {
-               if( edad != 0) {
-                  Integer edadMinima = Integer.parseInt(catCie10.getLinf().replaceAll("[^0-9]", ""));
-                  Integer edadMaxima = Integer.parseInt(catCie10.getLsup().replaceAll("[^0-9]", ""));
+               if(edad != 0) {
+                  int edadMinima = convertirEdad(catCie10.getLinf());
+                  int edadMaxima = convertirEdad(catCie10.getLsup());
+
+                  System.err.println("edad Minima2: " + edadMinima);
+                  System.err.println("edad Maxima2: " + edadMaxima);
 
                   if (edad >= edadMinima && edad <= edadMaxima) {
                      catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));

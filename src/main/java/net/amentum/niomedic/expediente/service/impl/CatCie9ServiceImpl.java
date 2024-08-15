@@ -10,6 +10,7 @@ import net.amentum.niomedic.expediente.persistence.CatCie9Repository;
 import net.amentum.niomedic.expediente.service.CatCie9Service;
 import net.amentum.niomedic.expediente.views.CatCie9FiltradoView;
 import net.amentum.niomedic.expediente.views.CatCie9View;
+import org.apache.tomcat.util.descriptor.web.SecurityRoleRef;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -24,10 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.criteria.Predicate;
 import java.text.Normalizer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @Service
@@ -143,11 +141,18 @@ public class CatCie9ServiceImpl implements CatCie9Service {
 
          catCie9Page.getContent().forEach(catCie9 -> {
             /* Filtrado por sexo y edad */
-            if(catCie9.getSexType() != null && sexo != "") {
-               if (catCie9.getSexType() == "2.0" && sexo == "MUJER" || catCie9.getSexType() == "1.0" && sexo == "HOMBRE") {
+            if(sexo != "") {
+               System.err.println("Sexo: " + sexo);
+               System.err.println("SEXO: " + catCie9.getSexType());
+               System.err.println((Objects.equals(catCie9.getSexType(), "2.0") && Objects.equals(sexo, "MUJER")));
+               System.err.println(("1.0".equals(catCie9.getSexType()) && "HOMBRE".equals(sexo)));
+               if ((Objects.equals(catCie9.getSexType(), "2.0") && Objects.equals(sexo, "MUJER")) || ("1.0".equals(catCie9.getSexType()) && "HOMBRE".equals(sexo))) {
                   if (edad != 0) {
                      Integer edadMinima = Integer.parseInt(catCie9.getProEdadIa().replaceAll("[^0-9]", ""));
                      Integer edadMaxima = Integer.parseInt(catCie9.getProEdadFa().replaceAll("[^0-9]", ""));
+
+                     System.err.println("edadMinima" + " - " + edadMinima);
+                     System.err.println("edadMaxima" + " - " + edadMaxima);
 
                      if (edad >= edadMinima && edad <= edadMaxima) {
                         catCie9FiltradoViewList.add(catCie9FiltradoConverter.toView(catCie9, Boolean.TRUE));
@@ -160,6 +165,9 @@ public class CatCie9ServiceImpl implements CatCie9Service {
                if (edad != 0) {
                   Integer edadMinima = Integer.parseInt(catCie9.getProEdadIa().replaceAll("[^0-9]", ""));
                   Integer edadMaxima = Integer.parseInt(catCie9.getProEdadFa().replaceAll("[^0-9]", ""));
+
+                  System.err.println("edadMinima" + " - " + edadMinima);
+                  System.err.println("edadMaxima" + " - " + edadMaxima);
 
                   if (edad >= edadMinima && edad <= edadMaxima) {
                      catCie9FiltradoViewList.add(catCie9FiltradoConverter.toView(catCie9, Boolean.TRUE));

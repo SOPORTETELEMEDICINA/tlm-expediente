@@ -21,6 +21,10 @@ public class CatCie10FiltradoConverter {
       catCie10FiltradoView.setNombre(catCie10.getNombre());
       catCie10FiltradoView.setDescripcionCapitulo(catCie10.getDescripcionCapitulo());
       catCie10FiltradoView.setActivo(catCie10.getActivo());
+      catCie10FiltradoView.setLinf(catCie10.getLinf());
+      catCie10FiltradoView.setLsup(catCie10.getLsup());
+      catCie10FiltradoView.setLsex(catCie10.getLsex());
+
 
       logger.debug("convertir CatCie10 to FiltradoView: {}", catCie10FiltradoView);
       return catCie10FiltradoView;
