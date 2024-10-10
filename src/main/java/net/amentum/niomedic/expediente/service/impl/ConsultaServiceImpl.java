@@ -37,14 +37,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -886,7 +879,30 @@ public class ConsultaServiceImpl implements ConsultaService {
 			}
 			List<Padecimiento> listToDelete = padecimientoRepository.findAllByIdPaciente(consultaView.getIdPaciente().toString());
 			logger.info("Lista de padecimientos a borrar: {}", listToDelete);
-			padecimientoRepository.delete(listToDelete);
+
+			Map<Long, Padecimiento> uniquePadecimientos = new LinkedHashMap<>();
+			for (Padecimiento pad : listToDelete) {
+				Set<Consulta> consultas = pad.getConsultaList();
+				for (Consulta cons : consultas) {
+					Long idConsulta = cons.getIdConsulta();
+					uniquePadecimientos.put(idConsulta, pad);
+				}
+			}
+			List<Padecimiento> filteredMap = new ArrayList<>();
+			Map<Long, Long> filteredMapAux = new LinkedHashMap<>();
+
+			for (Map.Entry<Long, Padecimiento> entry : uniquePadecimientos.entrySet()) {
+				Long idConsulta = entry.getKey();
+				Padecimiento pad = entry.getValue();
+				Long idPadecimiento = pad.getIdPadecimiento();
+
+				if (!filteredMapAux.containsValue(idPadecimiento)) {
+					filteredMapAux.put(idConsulta, idPadecimiento);
+					filteredMap.add(pad);
+				}
+			}
+			padecimientoRepository.delete(filteredMap);
+
 			for (PadecimientoView padecimientoView : consultaView.getListaPadecimiento()) {
 				if (padecimientoView != null) {
 					CatCie10 catCie10 = catCie10Repository.findOne(padecimientoView.getCie10Id());
@@ -917,7 +933,7 @@ public class ConsultaServiceImpl implements ConsultaService {
 				if (tratamientoView != null) {
 					if (!catCie9Repository.exists(tratamientoView.getCatCie9Id())) {
 						ee = new ConsultaException("Ocurrio un erro al actualizar la consulta", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
-						ee.addError("No existe el sistema el CactCie9 con el Id: " + tratamientoView.getCatCie9Id());
+						ee.addError("No existe el sistema el CatCie9 con el Id: " + tratamientoView.getCatCie9Id());
 						throw ee;
 					}
 
@@ -961,8 +977,9 @@ public class ConsultaServiceImpl implements ConsultaService {
 			throw ee;
 		} catch (Exception e) {
 			ConsultaException ee = new ConsultaException("Ocurrio un erro al actualizar la consulta", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
+			e.printStackTrace();
 			ee.addError("No fue posible actualizar la consulta");
-			logger.error("updateConsulta() - idConsulta: {} - CODE {} - {}", consultaView.getIdConsulta(), ee.getExceptionCode(), ee);
+			logger.error("updateConsulta() - idConsulta: {} - CODE {} - {}", consultaView.getIdConsulta(), ee.getExceptionCode(), e.getMessage());
 			throw ee;
 		}
 	}

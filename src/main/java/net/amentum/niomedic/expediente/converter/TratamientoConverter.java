@@ -29,7 +29,7 @@ public class TratamientoConverter {
 	}
 	public TratamientoView toView(TratamientoView tratamientoView, Tratamiento tratamiento) {
 		tratamientoView.setIdTratamiento(tratamiento.getIdTratamiento());
-		tratamientoView.setCatCie9Id(tratamiento.getCatCie9().getIdCie9());
+		tratamientoView.setCatCie9Id(tratamiento.getCatCie9() != null ? tratamiento.getCatCie9().getIdCie9() : null);
 		tratamientoView.setConsultaId(tratamiento.getConsulta().getIdConsulta());
 		tratamientoView.setFechaCreacion(tratamiento.getFechaCreacion());
 		tratamientoView.setCatalogKey(tratamiento.getCatalogKey());
