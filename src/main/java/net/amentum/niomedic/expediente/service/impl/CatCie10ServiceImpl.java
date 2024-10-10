@@ -156,6 +156,29 @@ public class CatCie10ServiceImpl implements CatCie10Service {
                if (Objects.equals(catCie10.getLsex(), sexo)) {
                   System.err.println("If edad " + edad);
                   if(edad != 0) {
+                     System.err.println("LINF " + catCie10.getLinf());
+                     System.err.println("LSUP " + catCie10.getLsup());
+
+                     if(catCie10.getLinf() != null && catCie10.getLsup() != null) {
+                        int edadMinima = convertirEdad(catCie10.getLinf());
+                        int edadMaxima = convertirEdad(catCie10.getLsup());
+
+                        System.err.println("edad Minima2: " + edadMinima);
+                        System.err.println("edad Maxima2: " + edadMaxima);
+
+                        if (edad >= edadMinima && edad <= edadMaxima) {
+                           catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));
+                        }
+                     } else {
+                        catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));
+                     }
+                  } else {
+                     catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));
+                  }
+               }
+            } else {
+               if(edad != 0) {
+                  if(catCie10.getLinf() != null && catCie10.getLsup() != null) {
                      int edadMinima = convertirEdad(catCie10.getLinf());
                      int edadMaxima = convertirEdad(catCie10.getLsup());
 
@@ -166,18 +189,6 @@ public class CatCie10ServiceImpl implements CatCie10Service {
                         catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));
                      }
                   } else {
-                     catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));
-                  }
-               }
-            } else {
-               if(edad != 0) {
-                  int edadMinima = convertirEdad(catCie10.getLinf());
-                  int edadMaxima = convertirEdad(catCie10.getLsup());
-
-                  System.err.println("edad Minima2: " + edadMinima);
-                  System.err.println("edad Maxima2: " + edadMaxima);
-
-                  if (edad >= edadMinima && edad <= edadMaxima) {
                      catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));
                   }
                } else {
