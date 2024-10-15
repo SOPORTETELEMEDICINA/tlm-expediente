@@ -7,6 +7,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -20,9 +21,9 @@ public class CatCuestionarioPaciente {
     @Column(name = "id")
     Integer idCatCuestionarioPaciente;
 
-    @NotEmpty(message = "Ingrese el id del paciente")
+    @NotNull(message = "Ingrese el id del paciente")
     @Column(name = "id_paciente")
-    String idPaciente;
+    UUID idPaciente;
 
     @NotNull(message = "Ingrese el status")
     @Column(name = "status")

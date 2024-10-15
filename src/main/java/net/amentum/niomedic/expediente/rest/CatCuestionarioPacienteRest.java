@@ -26,7 +26,7 @@ public class CatCuestionarioPacienteRest extends BaseController {
     public void createCuestionarioPaciente(@RequestBody @Valid CatCuestionarioPacienteView view) throws CatCuestionarioPacienteException {
         try {
             logger.info("Insertando nuevo cuestionario-paciente: {}", view);
-            if(view.getIdPaciente() == null || view.getIdPaciente().isEmpty()) {
+            if(view.getIdPaciente() == null) {
                 logger.error("id_paciente vacío");
                 CatCuestionarioPacienteException catEx = new CatCuestionarioPacienteException("Ocurrió un error al agregar la relación", CatCuestionarioPacienteException.LAYER_REST, CatCuestionarioPacienteException.ACTION_VALIDATE);
                 catEx.addError("id_paciente vacío");
