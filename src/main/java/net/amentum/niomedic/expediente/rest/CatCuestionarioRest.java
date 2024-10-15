@@ -123,9 +123,11 @@ public class CatCuestionarioRest extends BaseController {
     public Page<CatCuestionarioView> getCuestionarioSearch(@RequestParam(required = false) Integer page,
                                                             @RequestParam(required = false) Integer size,
                                                             @RequestParam(required = false) String orderColumn,
-                                                            @RequestParam(required = false) String orderType) throws CatCuestionariosException {
+                                                           @RequestParam(required = false) String orderType,
+                                                           @RequestParam(required = false) String idPaciente,
+                                                           @RequestParam(required = false) Integer idStatus) throws CatCuestionariosException {
         try {
-            logger.info("getCuestionarioSearch(): - page: {} - size: {} - orderColumn: {} - orderType: {}", page, size,orderColumn, orderType);
+            logger.info("getCuestionarioSearch(): - idPaciente: {}- idStatus: {} - page: {} - size: {} - orderColumn: {} - orderType: {}",idPaciente, idStatus, page, size,orderColumn, orderType );
             if(page == null)
                 page = 0;
             if(size == null)
@@ -134,7 +136,11 @@ public class CatCuestionarioRest extends BaseController {
                 orderType = "ASC";
             if(orderColumn == null || orderColumn.isEmpty())
                 orderColumn = "sort";
-            return service.getCuestionarioSearch(page,size,orderColumn,orderType);
+            if(idPaciente == null || idPaciente.isEmpty())
+                idPaciente = "";
+            if(idStatus == null)
+                idStatus = 0;
+            return service.getCuestionarioSearch(page,size,orderColumn,orderType,idPaciente,idStatus);
         } catch(CatCuestionariosException ex) {
             throw ex;
         } catch (Exception ex) {

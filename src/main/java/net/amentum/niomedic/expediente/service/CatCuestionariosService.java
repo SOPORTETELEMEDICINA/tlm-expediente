@@ -13,6 +13,6 @@ public interface CatCuestionariosService {
 
     CatCuestionarioView getCuestionario(Integer idCuestionario) throws CatCuestionariosException;
 
-    Page<CatCuestionarioView> getCuestionarioSearch(Integer page, Integer size, String orderColumn, String orderType) throws CatCuestionariosException;
+    Page<CatCuestionarioView> getCuestionarioSearch(Integer page, Integer size, String orderColumn, String orderType, String idPaciente, Integer idStatus) throws CatCuestionariosException;
 
 }
