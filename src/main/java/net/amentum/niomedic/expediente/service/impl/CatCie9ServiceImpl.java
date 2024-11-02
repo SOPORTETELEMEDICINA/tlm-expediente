@@ -140,43 +140,49 @@ public class CatCie9ServiceImpl implements CatCie9Service {
          catCie9Page = catCie9Repository.findAll(spec, request);
 
          catCie9Page.getContent().forEach(catCie9 -> {
-            /* Filtrado por sexo y edad */
-            if(sexo != "") {
-               System.err.println("Sexo: " + sexo);
-               System.err.println("SEXO: " + catCie9.getSexType());
-               System.err.println((Objects.equals(catCie9.getSexType(), "2.0") && Objects.equals(sexo, "MUJER")));
-               System.err.println(("1.0".equals(catCie9.getSexType()) && "HOMBRE".equals(sexo)));
-               if ((Objects.equals(catCie9.getSexType(), "2.0") && Objects.equals(sexo, "MUJER")) || ("1.0".equals(catCie9.getSexType()) && "HOMBRE".equals(sexo))) {
-                  if (edad != 0) {
-                     Integer edadMinima = Integer.parseInt(catCie9.getProEdadIa().replaceAll("[^0-9]", ""));
-                     Integer edadMaxima = Integer.parseInt(catCie9.getProEdadFa().replaceAll("[^0-9]", ""));
+            boolean coincideSexo = true;
+            boolean coincideEdad = true;
 
-                     System.err.println("edadMinima" + " - " + edadMinima);
-                     System.err.println("edadMaxima" + " - " + edadMaxima);
+            // Verificar restricción de sexo
+            if (sexo != null && !sexo.isEmpty()) {
+               String sexType = catCie9.getSexType();
+               System.err.println("Sexo ingresado: " + sexo);
+               System.err.println("Sexo del registro: " + sexType);
 
-                     if (edad >= edadMinima && edad <= edadMaxima) {
-                        catCie9FiltradoViewList.add(catCie9FiltradoConverter.toView(catCie9, Boolean.TRUE));
-                     }
+               if (sexType != null && !sexType.isEmpty()) {
+                  if ((Objects.equals(sexType, "2.0") && Objects.equals(sexo.toUpperCase(), "MUJER")) ||
+                          (Objects.equals(sexType, "1.0") && Objects.equals(sexo.toUpperCase(), "HOMBRE"))) {
+                     coincideSexo = true;
                   } else {
-                     catCie9FiltradoViewList.add(catCie9FiltradoConverter.toView(catCie9, Boolean.TRUE));
+                     coincideSexo = false;
                   }
                }
-            } else {
-               if (edad != 0) {
-                  Integer edadMinima = Integer.parseInt(catCie9.getProEdadIa().replaceAll("[^0-9]", ""));
-                  Integer edadMaxima = Integer.parseInt(catCie9.getProEdadFa().replaceAll("[^0-9]", ""));
-
-                  System.err.println("edadMinima" + " - " + edadMinima);
-                  System.err.println("edadMaxima" + " - " + edadMaxima);
-
-                  if (edad >= edadMinima && edad <= edadMaxima) {
-                     catCie9FiltradoViewList.add(catCie9FiltradoConverter.toView(catCie9, Boolean.TRUE));
-                  }
-               } else {
-                  catCie9FiltradoViewList.add(catCie9FiltradoConverter.toView(catCie9, Boolean.TRUE));
-               }
+               // Si sexType es null, vacío o "0", lo consideramos sin restricción y coincideSexo permanece true
             }
 
+            // Verificar restricción de edad
+            if (edad != null && edad != 0) {
+               String proEdadIa = catCie9.getProEdadIa();
+               String proEdadFa = catCie9.getProEdadFa();
+
+               if (proEdadIa != null && !proEdadIa.isEmpty() && !"0".equals(proEdadIa) &&
+                       proEdadFa != null && !proEdadFa.isEmpty() && !"0".equals(proEdadFa)) {
+
+                  Integer edadMinima = Integer.parseInt(proEdadIa.replaceAll("[^0-9]", ""));
+                  Integer edadMaxima = Integer.parseInt(proEdadFa.replaceAll("[^0-9]", ""));
+
+                  System.err.println("Edad mínima: " + edadMinima);
+                  System.err.println("Edad máxima: " + edadMaxima);
+
+                  coincideEdad = edad >= edadMinima && edad <= edadMaxima;
+               }
+               // Si proEdadIa o proEdadFa son null, están vacíos o son "0", lo consideramos sin restricción y coincideEdad permanece true
+            }
+
+            // Agregar a la lista si cumple las condiciones de sexo y edad
+            if (coincideSexo && coincideEdad) {
+               catCie9FiltradoViewList.add(catCie9FiltradoConverter.toView(catCie9, Boolean.TRUE));
+            }
          });
 
          PageImpl<CatCie9FiltradoView> catCie9FiltradoViewPage = new PageImpl<CatCie9FiltradoView>(catCie9FiltradoViewList, request, catCie9Page.getTotalElements());

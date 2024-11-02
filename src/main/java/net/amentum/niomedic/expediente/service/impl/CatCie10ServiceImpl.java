@@ -151,49 +151,34 @@ public class CatCie10ServiceImpl implements CatCie10Service {
          System.err.println("Error: " + catCie10Page.getTotalElements());
 
          catCie10Page.getContent().forEach(catCie10 -> {
-            if(!Objects.equals(sexo, "")) {
-               System.err.println("If sexo " + sexo + "," + catCie10.getLsex());
-               if (Objects.equals(catCie10.getLsex(), sexo)) {
-                  System.err.println("If edad " + edad);
-                  if(edad != 0) {
-                     System.err.println("LINF " + catCie10.getLinf());
-                     System.err.println("LSUP " + catCie10.getLsup());
+            boolean coincideSexo = true;
+            boolean coincideEdad = true;
 
-                     if(catCie10.getLinf() != null && catCie10.getLsup() != null) {
-                        int edadMinima = convertirEdad(catCie10.getLinf());
-                        int edadMaxima = convertirEdad(catCie10.getLsup());
-
-                        System.err.println("edad Minima2: " + edadMinima);
-                        System.err.println("edad Maxima2: " + edadMaxima);
-
-                        if (edad >= edadMinima && edad <= edadMaxima) {
-                           catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));
-                        }
-                     } else {
-                        catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));
-                     }
-                  } else {
-                     catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));
-                  }
+            // Verificar restricción de sexo
+            if (!sexo.isEmpty()) {
+               String lsex = catCie10.getLsex();
+               System.err.println("Verificando sexo: " + sexo + ", lsex: " + lsex);
+               if (lsex != null && !lsex.isEmpty()) {
+                  coincideSexo = lsex.equals(sexo);
                }
-            } else {
-               if(edad != 0) {
-                  if(catCie10.getLinf() != null && catCie10.getLsup() != null) {
-                     int edadMinima = convertirEdad(catCie10.getLinf());
-                     int edadMaxima = convertirEdad(catCie10.getLsup());
+            }
 
-                     System.err.println("edad Minima2: " + edadMinima);
-                     System.err.println("edad Maxima2: " + edadMaxima);
-
-                     if (edad >= edadMinima && edad <= edadMaxima) {
-                        catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));
-                     }
-                  } else {
-                     catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));
-                  }
-               } else {
-                  catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));
+            // Verificar restricción de edad
+            if (edad != 0) {
+               String linf = catCie10.getLinf();
+               String lsup = catCie10.getLsup();
+               System.err.println("Verificando edad: " + edad + ", linf: " + linf + ", lsup: " + lsup);
+               if (linf != null && lsup != null) {
+                  int edadMinima = convertirEdad(linf);
+                  int edadMaxima = convertirEdad(lsup);
+                  System.err.println("Edad mínima: " + edadMinima + ", edad máxima: " + edadMaxima);
+                  coincideEdad = edad >= edadMinima && edad <= edadMaxima;
                }
+            }
+
+            // Agregar a la lista si ambas condiciones se cumplen
+            if (coincideSexo && coincideEdad) {
+               catCie10FiltradoViewList.add(catCie10FiltradoConverter.toView(catCie10, Boolean.TRUE));
             }
          });
 
