@@ -1506,10 +1506,10 @@ public class ReportesServiceImpl implements ReportesService {
          }
 
          try {
-            Map<String, Object> grupo = apiConfiguration.getGrupoById(idGroup);
-
-            parametros.put("txtImage", String.valueOf(grupo.get("imagen")));
-
+//            Map<String, Object> grupo = apiConfiguration.getGrupoById(idGroup);
+            String img = apiConfiguration.getImgColor(idGroup, "negro");
+            parametros.put("txtImage", img);
+            
             Map<String, Object> medico = apiConfiguration.getMedicoByid(consulta.getIdMedico().toString());
             log.info("Objeto de medico: {}", medico);
 
