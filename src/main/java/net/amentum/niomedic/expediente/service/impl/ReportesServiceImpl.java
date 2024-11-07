@@ -751,8 +751,8 @@ public class ReportesServiceImpl implements ReportesService {
          }
          // GGR20200619 Inicia cambios para cambiar nota medica por logo de grupo o default Imagen IMSS
          try {
-            Map<String, Object> grupo = apiConfiguration.getGrupoById(idGroup);
-            parametros.put("imagen", (String) grupo.get("imagen"));
+            String img = apiConfiguration.getImgColor(idGroup, "negro");
+            parametros.put("txtImage", img);
          } catch (Exception e) {
             parametros.put("imagen", null);
          }
