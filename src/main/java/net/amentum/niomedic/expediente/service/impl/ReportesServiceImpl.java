@@ -1435,6 +1435,19 @@ public class ReportesServiceImpl implements ReportesService {
             Map<String, Object> receta = apiConfiguration.getRecetaByidConsulta(consulta.getIdConsulta());
             logger.info("Objeto receta - {}", receta);
             parametros.put("txtFolio", (receta.get("numeroFolio") == null) ? "" : String.valueOf(receta.get("numeroFolio")));
+            List<Map<String, Object>> tratamientosReporte = new ArrayList<>();
+            try {
+               Map<String, Object> itemPlan = new HashMap<>();
+               itemPlan.put("txtPlan", (receta.get("cuidadosGenerales") == null) ? "" : receta.get("cuidadosGenerales"));
+               tratamientosReporte.add(itemPlan);
+            } catch (Exception ex) {
+               Map<String, Object> itemPlan = new HashMap<>();
+               itemPlan.put("txtPlan", "N/A");
+               tratamientosReporte.add(itemPlan);
+            }
+
+            JRBeanCollectionDataSource itemsJRBeanTratamiento = new JRBeanCollectionDataSource(tratamientosReporte);
+            parametros.put("CollectionBeanParamTratamiento", itemsJRBeanTratamiento);
             ArrayList detalleReceta = (ArrayList) receta.get("detalleRecetaViewList");
             if (detalleReceta != null && !detalleReceta.isEmpty()) {
                detalleReceta.forEach((deta) -> {
@@ -1507,7 +1520,7 @@ public class ReportesServiceImpl implements ReportesService {
 
          try {
 //            Map<String, Object> grupo = apiConfiguration.getGrupoById(idGroup);
-            String img = apiConfiguration.getImgColor(idGroup, "negro");
+            String img = apiConfiguration.getImgColor(idGroup, "Rnegro");
             parametros.put("txtImage", img);
             
             Map<String, Object> medico = apiConfiguration.getMedicoByid(consulta.getIdMedico().toString());
@@ -1520,22 +1533,22 @@ public class ReportesServiceImpl implements ReportesService {
                parametros.put("txtImageFirma", firma.get("contenido"));
             }
          } catch (Exception e) {
-            parametros.put("imagen", null);
+            parametros.put("txtImageFirma", null);
          }
 
-         List<Map<String, Object>> tratamientosReporte = new ArrayList<>();
-         try {
-            Map<String, Object> itemPlan = new HashMap<>();
-            itemPlan.put("txtPlan", (consulta.getPlanTerapeutico() == null) ? "" : consulta.getPlanTerapeutico());
-            tratamientosReporte.add(itemPlan);
-         } catch (Exception ex) {
-            Map<String, Object> itemPlan = new HashMap<>();
-            itemPlan.put("txtPlan", "N/A");
-            tratamientosReporte.add(itemPlan);
-         }
-
-         JRBeanCollectionDataSource itemsJRBeanTratamiento = new JRBeanCollectionDataSource(tratamientosReporte);
-         parametros.put("CollectionBeanParamTratamiento", itemsJRBeanTratamiento);
+//         List<Map<String, Object>> tratamientosReporte = new ArrayList<>();
+//         try {
+//            Map<String, Object> itemPlan = new HashMap<>();
+//            itemPlan.put("txtPlan", (receta.getPlanTerapeutico() == null) ? "" : consulta.getPlanTerapeutico());
+//            tratamientosReporte.add(itemPlan);
+//         } catch (Exception ex) {
+//            Map<String, Object> itemPlan = new HashMap<>();
+//            itemPlan.put("txtPlan", "N/A");
+//            tratamientosReporte.add(itemPlan);
+//         }
+//
+//         JRBeanCollectionDataSource itemsJRBeanTratamiento = new JRBeanCollectionDataSource(tratamientosReporte);
+//         parametros.put("CollectionBeanParamTratamiento", itemsJRBeanTratamiento);
 
          JRBeanCollectionDataSource itemsJRBean = new JRBeanCollectionDataSource(medicamentoList);
          parametros.put("CollectionBeanParam", itemsJRBean);
