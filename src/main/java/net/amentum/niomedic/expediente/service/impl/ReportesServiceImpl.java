@@ -422,391 +422,348 @@ public class ReportesServiceImpl implements ReportesService {
 
    @Override
    public String getNotasMedicasPresc(Long idConsulta, Long idGroup) throws ConsultaException {
-      try {
-         log.info("getNotasMedicas(): recibo idConsulta {} - idGroup: {}", idConsulta, idGroup);
-         Consulta consulta = consultaRepository.findByIdConsulta(idConsulta);
-         if (consulta == null) {
-            ConsultaException consE = new ConsultaException("No se encuentra en el sistema Consulta.", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
-            consE.addError("No existe la Consulta con el Id:" + idConsulta);
-            throw consE;
-         }
+       try {
+           log.info("getNotasMedicas(): recibo idConsulta {} - idGroup: {}", idConsulta, idGroup);
+           Consulta consulta = consultaRepository.findByIdConsulta(idConsulta);
+           if (consulta == null) {
+               ConsultaException consE = new ConsultaException("No se encuentra en el sistema Consulta.", ConsultaException.LAYER_DAO, ConsultaException.ACTION_VALIDATE);
+               consE.addError("No existe la Consulta con el Id:" + idConsulta);
+               throw consE;
+           }
 
-         Map<String, Object> parametros = new HashMap<>();
+           Map<String, Object> parametros = new HashMap<>();
 
-         parametros.put("txtTipoDocumento", "NOTA MÉDICA Y PRESCRIPCIÓN");
-         parametros.put("txtFolio", "Folio: " + ((consulta.getNumeroConsulta() == null) ? "" : consulta.getNumeroConsulta()));
-         parametros.put("datFechaCreacion", consulta.getFechaCrecion());
-         parametros.put("txtNombre", (consulta.getNombrePaciente() == null) ? "" : consulta.getNombrePaciente());
+           parametros.put("txtTipoDocumento", "NOTA MÉDICA Y PRESCRIPCIÓN");
+           parametros.put("txtFolio", "Folio: " + ((consulta.getNumeroConsulta() == null) ? "" : consulta.getNumeroConsulta()));
+           parametros.put("datFechaCreacion", consulta.getFechaCrecion());
+           parametros.put("txtNombre", (consulta.getNombrePaciente() == null) ? "" : consulta.getNombrePaciente());
 
-         try {
-            Map<String, Object> medico = apiConfiguration.getMedicoByid(consulta.getIdMedico().toString());
+           try {
+               Map<String, Object> medico = apiConfiguration.getMedicoByid(consulta.getIdMedico().toString());
 
-            if (medico.get("idUnidadMedica") != null) {
-               Long idUnidadMedica = ((Integer) medico.get("idUnidadMedica")).longValue();
-               Map<String, Object> unidadMedica = apiConfiguration.getUnidadMeicaByid(idUnidadMedica);
-               log.info("UM(): UM UM {}", unidadMedica);
+               if (medico.get("idUnidadMedica") != null) {
+                   Long idUnidadMedica = ((Integer) medico.get("idUnidadMedica")).longValue();
+                   Map<String, Object> unidadMedica = apiConfiguration.getUnidadMeicaByid(idUnidadMedica);
+                   log.info("UM(): UM UM {}", unidadMedica);
 
-               String nombreTipologia = ((String) unidadMedica.get("nombreTipologia")) == null ? "" : (String) unidadMedica.get("nombreTipologia");
-               String nombreUnidad = ((String) unidadMedica.get("nombreUnidad")) == null ? "" : (String) unidadMedica.get("nombreUnidad");
+                   String nombreTipologia = ((String) unidadMedica.get("nombreTipologia")) == null ? "" : (String) unidadMedica.get("nombreTipologia");
+                   String nombreUnidad = ((String) unidadMedica.get("nombreUnidad")) == null ? "" : (String) unidadMedica.get("nombreUnidad");
 
-               parametros.put("txtNombreUM", nombreTipologia + "-" + nombreUnidad);
+                   parametros.put("txtNombreUM", nombreTipologia + "-" + nombreUnidad);
 
-               String vialidad = ((String) unidadMedica.get("vialidad")) == null ? "" : (String) unidadMedica.get("vialidad");
-               String numeroExterior = ((String) unidadMedica.get("numeroExterior")) == null ? "" : (String) unidadMedica.get("numeroExterior");
-               String cp = ((String) unidadMedica.get("codigoPostal")) == null ? "" : (String) unidadMedica.get("codigoPostal");
-               String nombreJurisdiccion = ((String) unidadMedica.get("nombreJurisdiccion")) == null ? "" : (String) unidadMedica.get("nombreJurisdiccion");
-               String nombreEntidad = ((String) unidadMedica.get("nombreEntidad")) == null ? "" : (String) unidadMedica.get("nombreEntidad");
+                   String vialidad = ((String) unidadMedica.get("vialidad")) == null ? "" : (String) unidadMedica.get("vialidad");
+                   String numeroExterior = ((String) unidadMedica.get("numeroExterior")) == null ? "" : (String) unidadMedica.get("numeroExterior");
+                   String cp = ((String) unidadMedica.get("codigoPostal")) == null ? "" : (String) unidadMedica.get("codigoPostal");
+                   String nombreJurisdiccion = ((String) unidadMedica.get("nombreJurisdiccion")) == null ? "" : (String) unidadMedica.get("nombreJurisdiccion");
+                   String nombreEntidad = ((String) unidadMedica.get("nombreEntidad")) == null ? "" : (String) unidadMedica.get("nombreEntidad");
 
+                   String direccion = vialidad + " " + numeroExterior + " C.P. " + cp + " " + nombreJurisdiccion + " " + nombreEntidad;
+                   parametros.put("txtDireccionUM", direccion);
+                   parametros.put("txtLicSanitariaUM", ((String) unidadMedica.get("numeroLicenciaSanitaria")) == null ? "Licencia Sanitaria:" : "Licencia Sanitaria: " + (String) unidadMedica.get("numeroLicenciaSanitaria"));
+               }
 
-               String direccion = vialidad + " " + numeroExterior + " C.P. " + cp + " " + nombreJurisdiccion + " " + nombreEntidad;
-               parametros.put("txtDireccionUM", direccion);
-               parametros.put("txtLicSanitariaUM", ((String) unidadMedica.get("numeroLicenciaSanitaria")) == null ? "Licencia Sanitaria:" : "Licencia Sanitaria: " + (String) unidadMedica.get("numeroLicenciaSanitaria"));
-            }
+               //! THIS
+               parametros.put("txtNombreMedico", (consulta.getNombreMedico() == null) ? "No registrada" : consulta.getNombreMedico());
+               parametros.put("txtDR", (medico.get("sexo") == null) ? "No registrada" :
+                       (medico.get("sexo").toString().equalsIgnoreCase("hombre") ? "DR. " : "DRA. "));
+               //! THIS.END
 
-            //! THIS
-            parametros.put("txtNombreMedico", (consulta.getNombreMedico() == null) ? "No registrada" : consulta.getNombreMedico());
-            parametros.put("txtDR", (medico.get("sexo") == null) ? "No registrada" :
-                    (medico.get("sexo").toString().equalsIgnoreCase("hombre") ? "DR. " : "DRA. "));
-            //! THIS.END
+               ArrayList especialidad = (ArrayList) medico.get("especialidadViewList");
+               if (especialidad != null && !especialidad.isEmpty()) {
+                   Map<String, Object> esp = mapp.convertValue(especialidad.get(0), Map.class);
+                   parametros.put("txtCedulaMedico", "CED. PROF. " + (String) esp.get("cedula"));
+                   // Inicio GGR20200709 datos medico agrego Universidad y Especialidad
+                   String especialidadTxt = (esp.get("especialidad") == null ? "N/A" : (String) esp.get("especialidad"));
+                   String universidadTxt = (esp.get("universidad") == null ? "N/A" : (String) esp.get("universidad"));
+                   parametros.put("txtEspecialidadMedico", especialidadTxt);
+                   parametros.put("txtUniversidadMedico", universidadTxt);
+                   // Fin GGR20200709 datos medico
+               }
 
-            ArrayList especialidad = (ArrayList) medico.get("especialidadViewList");
-            if (especialidad != null && !especialidad.isEmpty()) {
-               Map<String, Object> esp = mapp.convertValue(especialidad.get(0), Map.class);
-               parametros.put("txtCedulaMedico", "CED. PROF. " + (String) esp.get("cedula"));
-               // Inicio GGR20200709 datos medico agrego Universidad y Especialidad
-               String especialidadTxt = (esp.get("especialidad") == null ? "N/A" : (String) esp.get("especialidad"));
-               String universidadTxt = (esp.get("universidad") == null ? "N/A" : (String) esp.get("universidad"));
-               parametros.put("txtEspecialidadMedico", especialidadTxt);
-               parametros.put("txtUniversidadMedico", universidadTxt);
-               // Fin GGR20200709 datos medico
-            }
+               // Inicio GGR20200709 datos domicilio medico agrego Universidad y Especialidad, y horario de atención
+               agregaDatosMedico(medico, parametros);
+               // Fin GGR20200709 datos domicilio
+               parametros.put("datFechaImpre", new Date());
 
-            // Inicio GGR20200709 datos domicilio medico agrego Universidad y Especialidad, y horario de atención
-            agregaDatosMedico(medico, parametros);
-            // Fin GGR20200709 datos domicilio
-            parametros.put("datFechaImpre", new Date());
+           } catch (Exception ex) {
+               parametros.put("txtNombreUM", "N/A");
+               parametros.put("txtDireccionUM", "N/A");
+               parametros.put("txtLicSanitariaUM", "N/A");
+               parametros.put("txtNombreMedico", "N/A");
+               parametros.put("txtCedulaMedico", "N/A");
+               parametros.put("datFechaImpre", new Date());
+               // Inicio GGR20200709 Datos adicionales del medico
+               parametros.put("txtEspecialidadMedico", "N/A");
+               parametros.put("txtUniversidadMedico", "N/A");
+               parametros.put("txtDireccionMedico", "N/A");
+               // Fin GGR20200709 Datos adicionales del medico
+           }
 
-         } catch (Exception ex) {
-            parametros.put("txtNombreUM", "N/A");
-            parametros.put("txtDireccionUM", "N/A");
-            parametros.put("txtLicSanitariaUM", "N/A");
-            parametros.put("txtNombreMedico", "N/A");
-            parametros.put("txtCedulaMedico", "N/A");
-            parametros.put("datFechaImpre", new Date());
-            // Inicio GGR20200709 Datos adicionales del medico
-            parametros.put("txtEspecialidadMedico", "N/A");
-            parametros.put("txtUniversidadMedico", "N/A");
-            parametros.put("txtDireccionMedico", "N/A");
-            // Fin GGR20200709 Datos adicionales del medico
+           try {
+               Map<String, Object> paciente = apiConfiguration.getPacieteByid(consulta.getIdPaciente().toString());
 
-         }
+               parametros.put("txtSexo", ((String) paciente.get("sexo")) == null ? "" : (String) paciente.get("sexo"));
+               Integer numExpe = ((Integer) paciente.get("numeroExpediente") == null) ? 0 : (Integer) paciente.get("numeroExpediente");
+               parametros.put("txtExpediente", numExpe + "");
+//         Integer numExpeHis = ((Integer) paciente.get("numeroExpediente") == null) ? 0 : (Integer) paciente.get("numeroExpediente");
+//         parametros.put("txtExpedienteHis", "N/A");
+               parametros.put("txtExpedienteHis", (consulta.getReferencia2() == null) ? "" : consulta.getReferencia2());
+               parametros.put("txtCurp", ((String) paciente.get("curp")) == null ? "" : (String) paciente.get("curp"));
 
-         try {
-            Map<String, Object> paciente = apiConfiguration.getPacieteByid(consulta.getIdPaciente().toString());
+               // Sección de alergias agregada
+               String alergias = (paciente.get("alergias") != null) ? (String) paciente.get("alergias") : "-";
+               parametros.put("txtAlergias", alergias);
 
-            parametros.put("txtSexo", ((String) paciente.get("sexo")) == null ? "" : (String) paciente.get("sexo"));
-            Integer numExpe = ((Integer) paciente.get("numeroExpediente") == null) ? 0 : (Integer) paciente.get("numeroExpediente");
-            parametros.put("txtExpediente", numExpe + "");
-//            Integer numExpeHis = ((Integer) paciente.get("numeroExpediente") == null) ? 0 : (Integer) paciente.get("numeroExpediente");
-//            parametros.put("txtExpedienteHis", "N/A");
-            parametros.put("txtExpedienteHis", (consulta.getReferencia2() == null) ? "" : consulta.getReferencia2());
-            parametros.put("txtCurp", ((String) paciente.get("curp")) == null ? "" : (String) paciente.get("curp"));
+               try {
+                   Date fechaNac = new Date((Long) paciente.get("fechaNacimiento"));
+                   parametros.put("datFechaNac", fechaNac);
 
-            try {
-               Date fechaNac = new Date((Long) paciente.get("fechaNacimiento"));
-               parametros.put("datFechaNac", fechaNac);
+                   Date today = new Date();
+                   Instant instant = Instant.ofEpochMilli(today.getTime());
+                   LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+                   LocalDate localDate = localDateTime.toLocalDate();
 
-               Date today = new Date();
-               Instant instant = Instant.ofEpochMilli(today.getTime());
-               LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
-               LocalDate localDate = localDateTime.toLocalDate();
+                   Instant instant2 = Instant.ofEpochMilli(fechaNac.getTime());
+                   LocalDateTime localDateTime2 = LocalDateTime.ofInstant(instant2, ZoneId.systemDefault());
+                   LocalDate localDate2 = localDateTime2.toLocalDate();
 
-               Instant instant2 = Instant.ofEpochMilli(fechaNac.getTime());
-               LocalDateTime localDateTime2 = LocalDateTime.ofInstant(instant2, ZoneId.systemDefault());
-               LocalDate localDate2 = localDateTime2.toLocalDate();
+                   Integer edad = Period.between(localDate2, localDate).getYears();
+                   parametros.put("txtEdad", edad + " años");
 
-               Integer edad = Period.between(localDate2, localDate).getYears();
-               parametros.put("txtEdad", edad + " años");
+               } catch (Exception ex) {
+                   parametros.put("datFechaNac", null);
+                   parametros.put("txtEdad", 0 + " años");
+               }
 
-            } catch (Exception ex) {
-               parametros.put("datFechaNac", null);
-               parametros.put("txtEdad", 0 + " años");
-            }
+           } catch (Exception ex) {
+               parametros.put("txtSexo", "");
+               parametros.put("txtExpediente", "");
+           }
 
-         } catch (Exception ex) {
-            parametros.put("txtSexo", "");
-            parametros.put("txtExpediente", "");
-         }
+           parametros.put("datFechaHora", consulta.getFechaConsulta());
+           parametros.put("txtSubjetivo", (consulta.getSubjetivo() == null) ? "" : consulta.getSubjetivo());
+           parametros.put("txtObjetivo", (consulta.getObjetivo() == null) ? "" : consulta.getObjetivo());
 
-         parametros.put("datFechaHora", consulta.getFechaConsulta());
-         parametros.put("txtSubjetivo", (consulta.getSubjetivo() == null) ? "" : consulta.getSubjetivo());
-         parametros.put("txtObjetivo", (consulta.getObjetivo() == null) ? "" : consulta.getObjetivo());
+           try {
+               Map<String, Object> signosVitales = mapp.convertValue(consulta.getSignosVitales(), Map.class);
 
-         try {
-            Map<String, Object> signosVitales = mapp.convertValue(consulta.getSignosVitales(), Map.class);
+               // Obtener y convertir temperatura
+               String tempStr = String.valueOf(signosVitales.get("temperatura"));
+               Integer temp = 0;
+               try {
+                   temp = Integer.parseInt(tempStr);
+               } catch (NumberFormatException e) {
+                   temp = 0;
+               }
+               parametros.put("txtTemperatura", "Temp.: " + temp + " °C");
 
-            // Obtener y convertir temperatura
-            String tempStr = String.valueOf(signosVitales.get("temperatura"));
-            Integer temp = 0;
-            try {
-               temp = Integer.parseInt(tempStr);
-            } catch (NumberFormatException e) {
-               // Valor predeterminado en caso de error en la conversión
-               temp = 0;
-            }
-            parametros.put("txtTemperatura", "Temp.: " + temp + " °C");
+               // Obtener y convertir peso
+               String pesoStr = String.valueOf(signosVitales.get("_peso"));
+               Integer peso = 0;
+               try {
+                   peso = Integer.parseInt(pesoStr);
+               } catch (NumberFormatException e) {
+                   peso = 0;
+               }
+               parametros.put("txtPeso", "Peso: " + peso + " kg");
 
-            // Obtener y convertir peso
-            String pesoStr = String.valueOf(signosVitales.get("_peso"));
-            Integer peso = 0;
-            try {
-               peso = Integer.parseInt(pesoStr);
-            } catch (NumberFormatException e) {
-               peso = 0; // Valor predeterminado en caso de error en la conversión
-            }
-            parametros.put("txtPeso", "Peso: " + peso + " kg");
+               // Obtener y convertir talla
+               String tallaStr = String.valueOf(signosVitales.get("_talla"));
+               Integer talla = 0;
+               try {
+                   talla = Integer.parseInt(tallaStr);
+               } catch (NumberFormatException e) {
+                   talla = 0;
+               }
+               parametros.put("txtTalla", "Talla: " + talla + " cm");
 
-            // Obtener y convertir talla
-            String tallaStr = String.valueOf(signosVitales.get("_talla"));
-            Integer talla = 0;
-            try {
-               talla = Integer.parseInt(tallaStr);
-            } catch (NumberFormatException e) {
-               talla = 0; // Valor predeterminado en caso de error en la conversión
-            }
-            parametros.put("txtTalla", "Talla: " + talla + " cm");
+               // Obtener y convertir IMC
+               String imcStr = String.valueOf(signosVitales.get("_imc"));
+               Double imc = 0.0;
+               try {
+                   imc = Double.parseDouble(imcStr);
+               } catch (NumberFormatException e) {
+                   imc = 0.0;
+               }
+               parametros.put("txtImc", "IMC: " + imc);
 
-            // Obtener y convertir IMC (considerando que IMC es un valor Double)
-            String imcStr = String.valueOf(signosVitales.get("_imc"));
-            Double imc = 0.0;
-            try {
-               imc = Double.parseDouble(imcStr);
-            } catch (NumberFormatException e) {
-               imc = 0.0; // Valor predeterminado en caso de error en la conversión
-            }
-            parametros.put("txtImc", "IMC: " + imc);
+               Map<String, Object> tensionArterial = mapp.convertValue(consulta.getSignosVitales().get("_tensionArterial"), Map.class);
+               String sistolicaStr = String.valueOf(tensionArterial.get("sistolica"));
+               Integer sistolica = 0;
+               try {
+                   sistolica = Integer.parseInt(sistolicaStr);
+               } catch (NumberFormatException e) {
+                   sistolica = 0;
+               }
+               String diastolicaStr = String.valueOf(tensionArterial.get("diastolica"));
+               Integer diastolica = 0;
+               try {
+                   diastolica = Integer.parseInt(diastolicaStr);
+               } catch (NumberFormatException e) {
+                   diastolica = 0;
+               }
+               parametros.put("txtPresArte", "P.A.: " + sistolica + " / " + diastolica);
 
-            Map<String, Object> tensionArterial = mapp.convertValue(consulta.getSignosVitales().get("_tensionArterial"), Map.class);
-            String sistolicaStr = String.valueOf(tensionArterial.get("sistolica"));
-            Integer sistolica = 0;
-            try {
-               sistolica = Integer.parseInt(sistolicaStr);
-            } catch (NumberFormatException e) {
-               sistolica = 0; // Valor por defecto en caso de error en la conversión
-            }
-            String diastolicaStr = String.valueOf(tensionArterial.get("diastolica"));
-            Integer diastolica = 0;
-            try {
-               diastolica = Integer.parseInt(diastolicaStr);
-            } catch (NumberFormatException e) {
-               diastolica = 0; // Valor por defecto en caso de error en la conversión
-            }
-            parametros.put("txtPresArte", "P.A.: " + sistolica + " / " + diastolica);
+               // Convertir y manejar frecuencia cardíaca
+               String frecCardiacaStr = String.valueOf(signosVitales.get("frecCardiaca"));
+               Integer frecCardiaca = 0;
+               try {
+                   frecCardiaca = Integer.parseInt(frecCardiacaStr);
+               } catch (NumberFormatException e) {
+                   frecCardiaca = 0;
+               }
+               parametros.put("txtFrecCardiaca", "F.C.: " + frecCardiaca + " x min.");
 
-            // Convertir y manejar frecuencia cardíaca
-            String frecCardiacaStr = String.valueOf(signosVitales.get("frecCardiaca"));
-            Integer frecCardiaca = 0;
-            try {
-               frecCardiaca = Integer.parseInt(frecCardiacaStr);
-            } catch (NumberFormatException e) {
-               frecCardiaca = 0; // Valor por defecto en caso de error en la conversión
-            }
-            parametros.put("txtFrecCardiaca", "F.C.: " + frecCardiaca + " x min.");
+               // Convertir y manejar frecuencia respiratoria
+               String frecRespiratoriaStr = String.valueOf(signosVitales.get("frecRespiratoria"));
+               Integer frecRespiratoria = 0;
+               try {
+                   frecRespiratoria = Integer.parseInt(frecRespiratoriaStr);
+               } catch (NumberFormatException e) {
+                   frecRespiratoria = 0;
+               }
+               parametros.put("txtFrecRespiratoria", "F.R.: " + frecRespiratoria + " x min.");
 
-            // Convertir y manejar frecuencia respiratoria
-            String frecRespiratoriaStr = String.valueOf(signosVitales.get("frecRespiratoria"));
-            Integer frecRespiratoria = 0;
-            try {
-               frecRespiratoria = Integer.parseInt(frecRespiratoriaStr);
-            } catch (NumberFormatException e) {
-               frecRespiratoria = 0; // Valor por defecto en caso de error en la conversión
-            }
-            parametros.put("txtFrecRespiratoria", "F.R.: " + frecRespiratoria + " x min.");
+               // Otros valores constantes
+               parametros.put("txtSatOxigeno", "Saturación Oxígeno: " + "N/A");
+               parametros.put("txtEvn", "EVN: " + "N/A");
+           } catch (Exception ex) {
+               log.error("===>>>Algo fallo con los datos de signos vitales/tension arterial: {}", ex);
+               parametros.put("txtTemperatura", "Temp.: 0 °C");
+               parametros.put("txtPeso", "Peso: 0 kg");
+               parametros.put("txtTalla", "Talla: 0 cm");
+               parametros.put("txtImc", "IMC: ");
+               parametros.put("txtPresArte", "P.A.: 0 / 0");
+               parametros.put("txtFrecCardiaca", "F.C.: 0 x min.");
+               parametros.put("txtFrecRespiratoria", "F.R.: 0 x min.");
+               parametros.put("txtSatOxigeno", "Saturación Oxígeno: " + "N/A");
+               parametros.put("txtEvn", "EVN: " + "N/A");
+           }
 
-            // Establecer otros valores que son constantes o no necesitan conversión
-            parametros.put("txtSatOxigeno", "Saturación Oxígeno: " + "N/A");
-            parametros.put("txtEvn", "EVN: " + "N/A");
-         } catch (Exception ex) {
-            log.error("===>>>Algo fallo con los datos de signos vitales/tension arterial: {}", ex);
-            parametros.put("txtTemperatura", "Temp.: 0 °C");
-            parametros.put("txtPeso", "Peso: 0 kg");
-            parametros.put("txtTalla", "Talla: 0 cm");
-            parametros.put("txtImc", "IMC: ");
-            parametros.put("txtPresArte", "P.A.: 0 / 0");
-            parametros.put("txtFrecCardiaca", "F.C.: 0 x min.");
-            parametros.put("txtFrecRespiratoria", "F.R.: 0 x min.");
-            parametros.put("txtSatOxigeno", "Saturación Oxígeno: " + "N/A");
-            parametros.put("txtEvn", "EVN: " + "N/A");
+           parametros.put("txtAnalisis", (consulta.getAnalisis() == null) ? "" : consulta.getAnalisis());
 
-         }
+           // GGR20200709 una sola función
+           agregaPadecimientosConsulta(consulta, parametros);
 
-         parametros.put("txtAnalisis", (consulta.getAnalisis() == null) ? "" : consulta.getAnalisis());
+           parametros.put("txtPlan", (consulta.getPlanTerapeutico() == null) ? "" : consulta.getPlanTerapeutico());
 
-//         Set<Padecimiento> diagnosticosSet = consulta.getPadecimiento();
-//         if (diagnosticosSet != null && !diagnosticosSet.isEmpty()) {
-//            String diagnosticos = " ";
-//            for (Padecimiento pade : diagnosticosSet) {
-//               diagnosticos += pade.getNombrePadecimiento() + "\n";
-//            }
-//            parametros.put("txtDiagnosticos", diagnosticos);
-//         } else {
-//            parametros.put("txtDiagnosticos", "");
-//         }
-         // GGR20200709 una sola función
-         agregaPadecimientosConsulta(consulta, parametros);
+           Collection<Tratamiento> tratamientoList = consulta.getTratamientoList();
+           if (tratamientoList != null && !tratamientoList.isEmpty()) {
+               String tratamientos = "";
+               for (Tratamiento trat : tratamientoList) {
+                   tratamientos += trat.getProNombre() + "\n";
+               }
+               parametros.put("txtTratamientos", tratamientos);
+           } else {
+               parametros.put("txtTratamientos", "");
+           }
 
-         parametros.put("txtPlan", (consulta.getPlanTerapeutico() == null) ? "" : consulta.getPlanTerapeutico());
+           parametros.put("txtResumen", (consulta.getResumen() == null) ? "" : consulta.getResumen());
+           parametros.put("txtPronostico", (consulta.getPronostico() == null ? "" : consulta.getPronostico()));
 
-         Collection<Tratamiento> tratamientoList = consulta.getTratamientoList();
-         if (tratamientoList != null && !tratamientoList.isEmpty()) {
-            String tratamientos = "";
-            for (Tratamiento trat : tratamientoList) {
-               tratamientos += trat.getProNombre() + "\n";
-            }
-            parametros.put("txtTratamientos", tratamientos);
-         } else {
-            parametros.put("txtTratamientos", "");
-         }
-
-         parametros.put("txtResumen", (consulta.getResumen() == null) ? "" : consulta.getResumen());
-         parametros.put("txtPronostico", (consulta.getPronostico() == null ? "" : consulta.getPronostico()));
-
-         try {
-            Map<String, Object> receta = apiConfiguration.getRecetaByidConsulta(consulta.getIdConsulta());
-            ArrayList detalleReceta = (ArrayList) receta.get("detalleRecetaViewList");
-            if (detalleReceta != null && !detalleReceta.isEmpty()) {
-               StringBuilder detaReceta = new StringBuilder("");
-               StringBuilder detalle = new StringBuilder("");
-               detalleReceta.forEach((deta) -> {
-                  LinkedHashMap tempo = (LinkedHashMap) deta;
-                  detalle.append((String) tempo.get("denominacionDistintiva") + " - " +
-                     (String) tempo.get("denominacionGenerica") + ", " +
-                     (String) tempo.get("dosis") + ", " +
-                     (String) tempo.get("unidad") + ", " +
-                     (String) tempo.get("viaAdministracion") + ", " +
-                     (String) tempo.get("frecuencia") + ", " +
-                     (String) tempo.get("periodo") + "\n");
-                  detaReceta.append(detalle);
-                  detalle.delete(0, detalle.length());
-               });
-               parametros.put("txtReceta", "" + detaReceta);
-            } else {
+           try {
+               Map<String, Object> receta = apiConfiguration.getRecetaByidConsulta(consulta.getIdConsulta());
+               ArrayList detalleReceta = (ArrayList) receta.get("detalleRecetaViewList");
+               if (detalleReceta != null && !detalleReceta.isEmpty()) {
+                   StringBuilder detaReceta = new StringBuilder("");
+                   StringBuilder detalle = new StringBuilder("");
+                   detalleReceta.forEach((deta) -> {
+                       LinkedHashMap tempo = (LinkedHashMap) deta;
+                       detalle.append((String) tempo.get("denominacionDistintiva") + " - " +
+                               (String) tempo.get("denominacionGenerica") + ", " +
+                               (String) tempo.get("dosis") + ", " +
+                               (String) tempo.get("unidad") + ", " +
+                               (String) tempo.get("viaAdministracion") + ", " +
+                               (String) tempo.get("frecuencia") + ", " +
+                               (String) tempo.get("periodo") + "\n");
+                       detaReceta.append(detalle);
+                       detalle.delete(0, detalle.length());
+                   });
+                   parametros.put("txtReceta", "" + detaReceta);
+               } else {
+                   parametros.put("txtReceta", "");
+               }
+           } catch (Exception ex) {
                parametros.put("txtReceta", "");
-            }
-         } catch (Exception ex) {
-            parametros.put("txtReceta", "");
-         }
+           }
 
-//         try {
-//            List<Map<String, Object>> estudioList = apiConfiguration.getEstudioByIdConsulta(consulta.getIdConsulta());
-////            System.out.println("===>>>" + estudioList);
-//            if (estudioList != null || !estudioList.isEmpty()) {
-//               StringBuilder estudioS = new StringBuilder();
-//               StringBuilder estudio = new StringBuilder();
-//               estudioList.forEach((estu) -> {
-//                  LinkedHashMap tempo = (LinkedHashMap) estu;
-//                  estudio.append((String) tempo.get("tipoEstudio") + ", " +
-//                     (String) tempo.get("descripcionEstudio") + ", " +
-//                     (String) tempo.get("preparacion") + "\n");
-//                  estudioS.append(estudio);
-//                  estudio.delete(0, estudio.length());
-//               });
-//               parametros.put("txtPrescripcion", "" + estudioS);
-//            } else {
-//               parametros.put("txtPrescripcion", "");
-//            }
-//         } catch (Exception ex) {
-//            parametros.put("txtPrescripcion", "");
-//         }
-
-         try {
-            List<Map<String, Object>> estudioList = apiConfiguration.getEstudioByIdConsulta(consulta.getIdConsulta());
-            if (estudioList != null && !estudioList.isEmpty()) {
-               StringBuilder estudioS = new StringBuilder();
-               StringBuilder estudio = new StringBuilder();
-               estudioList.forEach((estu) -> {
-                  estudio.append("Folio: " + estu.get("folio") + "\n\t");
-                  ArrayList detalle = (ArrayList) estu.get("detallesEstudioList");
-                  AtomicInteger index = new AtomicInteger(1);
-                  detalle.forEach((deta) -> {
-                     Map<String, Object> tempo = mapp.convertValue(deta, Map.class);
-                     System.out.println(deta);
-//                     estudio.append(index.getAndIncrement() + ") " + (String) tempo.get("tipoEstudio") + ", " +
-//                        (String) tempo.get("descripcionEstudio") + ", " +
-//                        (String) tempo.get("preparacion") + "\n\n\t");
-                     estudio.append(index.getAndIncrement() + ") " +
-                        ((String) tempo.get("tipoEstudio") == null ? "" : (String) tempo.get("tipoEstudio")) +
-                        ((String) tempo.get("descripcionEstudio") == null ? "" : ", " + (String) tempo.get("descripcionEstudio")) +
-                        ((String) tempo.get("preparacion") == null ? "" : ", " + (String) tempo.get("preparacion")) + "\n\n\t");
-                  });
-                  estudioS.append(estudio + "\n");
-                  estudio.delete(0, estudio.length());
-               });
-               parametros.put("txtPrescripcion", "" + estudioS);
-            } else {
+           try {
+               List<Map<String, Object>> estudioList = apiConfiguration.getEstudioByIdConsulta(consulta.getIdConsulta());
+               if (estudioList != null && !estudioList.isEmpty()) {
+                   StringBuilder estudioS = new StringBuilder();
+                   StringBuilder estudio = new StringBuilder();
+                   estudioList.forEach((estu) -> {
+                       estudio.append("Folio: " + estu.get("folio") + "\n\t");
+                       ArrayList detalle = (ArrayList) estu.get("detallesEstudioList");
+                       AtomicInteger index = new AtomicInteger(1);
+                       detalle.forEach((deta) -> {
+                           Map<String, Object> tempo = mapp.convertValue(deta, Map.class);
+                           System.out.println(deta);
+                           estudio.append(index.getAndIncrement() + ") " +
+                                   ((String) tempo.get("tipoEstudio") == null ? "" : (String) tempo.get("tipoEstudio")) +
+                                   ((String) tempo.get("descripcionEstudio") == null ? "" : ", " + (String) tempo.get("descripcionEstudio")) +
+                                   ((String) tempo.get("preparacion") == null ? "" : ", " + (String) tempo.get("preparacion")) + "\n\n\t");
+                       });
+                       estudioS.append(estudio + "\n");
+                       estudio.delete(0, estudio.length());
+                   });
+                   parametros.put("txtPrescripcion", "" + estudioS);
+               } else {
+                   parametros.put("txtPrescripcion", "");
+               }
+           } catch (Exception ex) {
                parametros.put("txtPrescripcion", "");
-            }
-         } catch (Exception ex) {
-            parametros.put("txtPrescripcion", "");
-         }
-         // GGR20200619 Inicia cambios para cambiar nota medica por logo de grupo o default Imagen IMSS
-         try {
-            String img = apiConfiguration.getImgColor(idGroup, "Nnegro");
-            if (img != null && !img.isEmpty()) {
-               parametros.put("imagen", img);
-            }
-            parametros.put("imagen", null);
-         } catch (Exception e) {
-            parametros.put("imagen", null);
-         }
-         // Fin GGR20200619
-         // Sre24062020 Inicia Dejo configurable el reporte a usar
-         InputStream jrxmlArchivo = getClass().getResourceAsStream("/reportes/NotasMedicasPrescr.jrxml");
-//         InputStream jrxmlArchivo = getClass().getResourceAsStream(reportesNotamedica);
-         // Sre24062020 Termina
-         JasperReport jasperArchivo = JasperCompileManager.compileReport(jrxmlArchivo);
-         byte[] byteReporte = JasperRunManager.runReportToPdf(jasperArchivo, parametros, new JREmptyDataSource());
+           }
+           // GGR20200619 Inicia cambios para cambiar nota medica por logo de grupo o default Imagen IMSS
+           try {
+               String img = apiConfiguration.getImgColor(idGroup, "Nnegro");
+               if (img != null && !img.isEmpty()) {
+                   parametros.put("imagen", img);
+               }
+               parametros.put("imagen", null);
+           } catch (Exception e) {
+               parametros.put("imagen", null);
+           }
+           // Fin GGR20200619
+           // Sre24062020 Inicia Dejo configurable el reporte a usar
+           InputStream jrxmlArchivo = getClass().getResourceAsStream("/reportes/NotasMedicasPrescr.jrxml");
+           // Sre24062020 Termina
+           JasperReport jasperArchivo = JasperCompileManager.compileReport(jrxmlArchivo);
+           byte[] byteReporte = JasperRunManager.runReportToPdf(jasperArchivo, parametros, new JREmptyDataSource());
 
-         /*// Inicio pruebas GGR20200619 lo escribo en disco por que en mi entorno me da timeout
-         FileOutputStream fop = new FileOutputStream(new File("C:\\Users\\Ggarcia\\Documents\\notamedica.pdf"));
-         fop.write(byteReporte);
-         fop.flush();
-         fop.close();
-         // Fin pruebas GGR20200619 */
+           byte[] codificado = Base64.encodeBase64(byteReporte);
+           String pdfFile = IOUtils.toString(codificado, "UTF-8");
 
-         byte[] codificado = Base64.encodeBase64(byteReporte);
-         String pdfFile = IOUtils.toString(codificado, "UTF-8");
-
-         return pdfFile;
-      } catch (ConsultaException consE) {
-         throw consE;
-      } catch (DataIntegrityViolationException dive) {
-         ConsultaException consE = new ConsultaException("No fue posible editar Consulta", ConsultaException.LAYER_DAO, ConsultaException.ACTION_SELECT);
-         consE.addError("No fue posible obtener detalles Consulta");
-         log.error("Error al obtener detalles Consulta - CODE {} - {}", consE.getExceptionCode(), idConsulta, consE);
-         throw consE;
-      } catch (JRException jreE) {
-         ConsultaException consE = new ConsultaException("No se pudo construir el reporte", ConsultaException.LAYER_DAO, ConsultaException.ACTION_SELECT);
-//         log.error("Error al obtener detalles Consulta - CODE {} - {}", consE.getExceptionCode(), idConsulta, consE); //tira TODA la exception
-         if (jreE.getMessage().contains("java.net.MalformedURLException")) {
-            log.error("===>>>No existe el archivo jrxml");
-            consE.addError("No existe el archivo jrxml");
-         } else {
-            log.error("===>>>{}", jreE.getMessage());
-            consE.addError("" + jreE.getMessage());
-            jreE.printStackTrace();
-         }
-         throw consE;
-      } catch (Exception ex) {
-         ConsultaException consE = new ConsultaException("Error inesperado al obtener detalles Consulta", ConsultaException.LAYER_DAO, ConsultaException.ACTION_SELECT);
-         consE.addError("Ocurrió un error al obtener detalles Consulta");
-         log.error("Error al obtener detalles Consulta - CODE {} - {}", consE.getExceptionCode(), idConsulta, consE);
-         log.error(ex.getMessage());
-         throw consE;
-      }
+           return pdfFile;
+       } catch (ConsultaException consE) {
+           throw consE;
+       } catch (DataIntegrityViolationException dive) {
+           ConsultaException consE = new ConsultaException("No fue posible editar Consulta", ConsultaException.LAYER_DAO, ConsultaException.ACTION_SELECT);
+           consE.addError("No fue posible obtener detalles Consulta");
+           log.error("Error al obtener detalles Consulta - CODE {} - {}", consE.getExceptionCode(), idConsulta, consE);
+           throw consE;
+       } catch (JRException jreE) {
+           ConsultaException consE = new ConsultaException("No se pudo construir el reporte", ConsultaException.LAYER_DAO, ConsultaException.ACTION_SELECT);
+           if (jreE.getMessage().contains("java.net.MalformedURLException")) {
+               log.error("===>>>No existe el archivo jrxml");
+               consE.addError("No existe el archivo jrxml");
+           } else {
+               log.error("===>>>{}", jreE.getMessage());
+               consE.addError("" + jreE.getMessage());
+               jreE.printStackTrace();
+           }
+           throw consE;
+       } catch (Exception ex) {
+           ConsultaException consE = new ConsultaException("Error inesperado al obtener detalles Consulta", ConsultaException.LAYER_DAO, ConsultaException.ACTION_SELECT);
+           consE.addError("Ocurrió un error al obtener detalles Consulta");
+           log.error("Error al obtener detalles Consulta - CODE {} - {}", consE.getExceptionCode(), idConsulta, consE);
+           log.error(ex.getMessage());
+           throw consE;
+       }
    }
 
-   @Override
+
+    @Override
    public String getNotasEvolucion(Long idConsulta) throws ConsultaException {
       try {
          Consulta consulta = consultaRepository.findByIdConsulta(idConsulta);
