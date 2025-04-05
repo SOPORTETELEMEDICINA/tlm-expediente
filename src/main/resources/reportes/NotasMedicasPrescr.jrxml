@@ -226,7 +226,7 @@
 				<textFieldExpression><![CDATA[$P{txtExpediente}.toUpperCase()]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="352" y="63" width="74" height="10" uuid="f6c974e2-41d3-451f-a928-598cab9b11a3">
+				<reportElement x="352" y="75" width="74" height="10" uuid="f6c974e2-41d3-451f-a928-598cab9b11a3">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.x" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -237,9 +237,10 @@
 				<text><![CDATA[DIAGNÓSTICO:]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="428" y="63" width="140" height="34" uuid="e3a0e906-7cbb-4e11-9b7b-7ebaa455fed9">
+				<reportElement x="428" y="75" width="140" height="20" uuid="e3a0e906-7cbb-4e11-9b7b-7ebaa455fed9">
 					<property name="com.jaspersoft.studio.unit.x" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -295,6 +296,30 @@
 					<font size="7"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{txtNombreUM}.toUpperCase()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="352" y="63" width="74" height="10" uuid="94f6d622-63de-402e-9a10-bbfcb38c906c">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<text><![CDATA[ALERGIAS]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="428" y="63" width="93" height="10" uuid="d457c54d-76e9-4313-a6d2-422738fef08c"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{txtAlergias}.toUpperCase()]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
