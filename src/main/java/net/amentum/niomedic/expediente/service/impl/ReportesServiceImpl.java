@@ -624,9 +624,26 @@ public class ReportesServiceImpl implements ReportesService {
                }
                parametros.put("txtFrecRespiratoria", "F.R.: " + frecRespiratoria + " x min.");
 
-               // Otros valores constantes
-               parametros.put("txtSatOxigeno", "Saturación Oxígeno: " + "N/A");
-               parametros.put("txtEvn", "EVN: " + "N/A");
+               // Obtener y convertir Saturación de Oxígeno
+               String satOxStr = String.valueOf(signosVitales.get("saturacionOxigeno"));
+               Integer satOx = 0;
+               try {
+                   satOx = Integer.parseInt(satOxStr);
+               } catch (NumberFormatException e) {
+                   // Se deja en 0 o se podría asignar otro valor predeterminado
+                   satOx = 0;
+               }
+               parametros.put("txtSatOxigeno", "Saturación Oxígeno: " + satOx);
+
+               // Obtener y convertir EVN
+               String evnStr = String.valueOf(signosVitales.get("evn"));
+               Integer evn = 0;
+               try {
+                   evn = Integer.parseInt(evnStr);
+               } catch (NumberFormatException e) {
+                   evn = 0;
+               }
+               parametros.put("txtEvn", "EVN: " + evn);
            } catch (Exception ex) {
                log.error("===>>>Algo fallo con los datos de signos vitales/tension arterial: {}", ex);
                parametros.put("txtTemperatura", "Temp.: 0 °C");
