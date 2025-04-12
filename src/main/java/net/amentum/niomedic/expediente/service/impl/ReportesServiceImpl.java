@@ -2852,8 +2852,8 @@ public class ReportesServiceImpl implements ReportesService {
             parametros.put("txtListaPadecimientos", "");
          }
 
-         //InputStream jrxmlArchivo = getClass().getResourceAsStream("/reportes/HistoriaClinica.jrxml");
-         InputStream jrxmlArchivo = getClass().getResourceAsStream(reporteHistoriaClinica);
+         InputStream jrxmlArchivo = getClass().getResourceAsStream("/reportes/HistoriaClinica.jrxml");
+//         InputStream jrxmlArchivo = getClass().getResourceAsStream(reporteHistoriaClinica);
          JasperReport jasperArchivo = JasperCompileManager.compileReport(jrxmlArchivo);
          byte[] byteReporte = JasperRunManager.runReportToPdf(jasperArchivo, parametros, new JREmptyDataSource());
          byte[] codificado = Base64.encodeBase64(byteReporte);
