@@ -86,9 +86,9 @@ public class ReportesRest extends BaseController {
    }
 
    //Reporte Historial Clínico
-   @RequestMapping(value = "historia-clinica/{idPaciente}", method = RequestMethod.GET)
+   @RequestMapping(value = "historia-clinica/{idPaciente}/{idGroup}", method = RequestMethod.GET)
    @ResponseStatus(HttpStatus.OK)
-   public String getHistoriaClinica(@PathVariable("idPaciente") String idPaciente) throws ConsultaException {
-      return reportesService.getHistoriaClinica(idPaciente);
+   public String getHistoriaClinica(@PathVariable("idPaciente") String idPaciente, @PathVariable("idGroup") Long idGroup) throws ConsultaException {
+      return reportesService.getHistoriaClinica(idPaciente, idGroup);
    }
 }

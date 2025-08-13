@@ -2444,10 +2444,20 @@ public class ReportesServiceImpl implements ReportesService {
    }
 
    @Override
-   public String getHistoriaClinica(String idPaciente) throws ConsultaException {
+   public String getHistoriaClinica(String idPaciente, Long idGroup) throws ConsultaException {
       try {
          Map<String, Object> parametros = new HashMap<>();
          Integer idUnidadMedica = 0;
+          try {
+              String img = apiConfiguration.getImgColor(idGroup, "Rnegro");
+              if (img != null && !img.isEmpty()) {
+                  parametros.put("imagen", img);
+              }
+              parametros.put("imagen", null);
+          } catch (Exception e) {
+              parametros.put("imagen", null);
+          }
+
 
          //Bloque para obtener la informacion del paciente
          try {

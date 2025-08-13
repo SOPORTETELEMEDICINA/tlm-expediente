@@ -27,5 +27,5 @@ public interface ReportesService {
 
    String getNotasInterconsulta(Long idConsulta) throws ConsultaException;
 
-   String getHistoriaClinica(String idPaciente) throws ConsultaException;
+   String getHistoriaClinica(String idPaciente, Long idGroup) throws ConsultaException;
 }
