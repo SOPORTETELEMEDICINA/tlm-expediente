@@ -247,12 +247,20 @@ public class SaludNivPesoServiceImpl implements SaludNivPesoService {
                         if (fechaInicio != null && fechaFin != null) {
                             try {
                                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-                                Date inicialDate = sdf.parse(fechaInicio);
-                                Date finalDate = sdf.parse(fechaFin);
+                                Date start = sdf.parse(fechaInicio);
+                                Calendar c = Calendar.getInstance();
+                                c.setTime(sdf.parse(fechaFin));
+                                c.add(Calendar.DAY_OF_MONTH, 1);
+                                Date endExclusive = c.getTime();
 
-                                tc = (tc != null) ?
-                                        cb.and(tc, cb.greaterThanOrEqualTo(root.get("pesofechahora"), inicialDate), cb.lessThanOrEqualTo(root.get("pesofechahora"), finalDate)) :
-                                        cb.and(cb.greaterThanOrEqualTo(root.get("pesofechahora"), inicialDate), cb.lessThanOrEqualTo(root.get("pesofechahora"), finalDate));
+                                tc = (tc != null)
+                                        ? cb.and(tc,
+                                        cb.greaterThanOrEqualTo(root.get("pesofechahora"), start),
+                                        cb.lessThan(root.get("pesofechahora"), endExclusive))
+                                        : cb.and(
+                                        cb.greaterThanOrEqualTo(root.get("pesofechahora"), start),
+                                        cb.lessThan(root.get("pesofechahora"), endExclusive));
+
                             } catch (Exception ex) {
                                 logger.warn("Error al convertir fechas", ex);
                             }

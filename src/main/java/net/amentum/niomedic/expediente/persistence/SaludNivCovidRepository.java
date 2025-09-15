@@ -15,14 +15,21 @@ import java.util.List;
 
 @Repository
 public interface SaludNivCovidRepository extends JpaRepository<SaludNivCovid, Long>, JpaSpecificationExecutor {
-    @Query(value ="SELECT  nc.*  FROM  salud_niveles_covid nc "
-            + "WHERE nc.pac_id_fk =':pacidfk' ",nativeQuery=true)
-    List<SaludNivCovid> findBycovidpac(@NotNull @Param("pacidfk") String pacidfk)throws Exception;
+    @Query(value = "SELECT nc.* FROM salud_niveles_covid nc " +
+            "WHERE nc.pac_id_fk = :pacidfk",
+            nativeQuery = true)
+    List<SaludNivCovid> findBycovidpac(@Param("pacidfk") String pacidfk);
 
-
-    @Query(value ="SELECT  nc.*  FROM  salud_niveles_covid nc  "
-            + "WHERE nc.pac_id_fk =':pacidfk' and nc.covidperiodo  between :periodo and :periodo2 and nc.covid_fecha_hora between ':fechaInicio' and ':fechaFin' ",nativeQuery=true)
-    List<SaludNivCovid> findByfecha(@NotNull @Param("pacidfk") String pacidfk, @NotNull @Param ("periodo") int periodo, @NotNull @Param ("periodo2") int periodo2, @NotNull @Param ("fechaInicio") Timestamp fechaInicio, @NotNull @Param ("fechaFin") Timestamp  fechaFin)throws Exception;
+    @Query(value = "SELECT nc.* FROM salud_niveles_covid nc " +
+            "WHERE nc.pac_id_fk = :pacidfk " +
+            "AND nc.covidperiodo BETWEEN :periodo AND :periodo2 " +
+            "AND nc.covid_fecha_hora BETWEEN :fechaInicio AND :fechaFin",
+            nativeQuery = true)
+    List<SaludNivCovid> findByfecha(@Param("pacidfk") String pacidfk,
+                                    @Param("periodo") int periodo,
+                                    @Param("periodo2") int periodo2,
+                                    @Param("fechaInicio") java.sql.Timestamp fechaInicio,
+                                    @Param("fechaFin") java.sql.Timestamp fechaFin);
 
     @Query( value ="SELECT  nc.*  FROM  salud_niveles_covid nc  "
             + "WHERE nc.pac_id_fk = ':pacidfk' and  nc.covidperiodo between :periodo and :periodo2 and nc.covid_fecha_hora between date_trunc(':dia', current_date :sentencia) and date_trunc('days', current_date) ",nativeQuery=true)

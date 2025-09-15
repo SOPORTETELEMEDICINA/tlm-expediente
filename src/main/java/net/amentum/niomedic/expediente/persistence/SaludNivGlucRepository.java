@@ -15,15 +15,21 @@ import java.util.List;
 
 @Repository
 public interface SaludNivGlucRepository  extends JpaRepository<SaludNivGluc, Long>, JpaSpecificationExecutor {
-    @Query(value ="SELECT  ng.*  FROM  salud_niveles_glucosa ng "
-            + "WHERE ng.pac_id_fk =':pacidfk' ",nativeQuery=true)
-    List<SaludNivGluc> findByglupac(@NotNull @Param("pacidfk") String pacidfk)throws Exception;
+    @Query(value = "SELECT ng.* FROM salud_niveles_glucosa ng " +
+            "WHERE ng.pac_id_fk = :pacidfk",
+            nativeQuery = true)
+    List<SaludNivGluc> findByglupac(@NotNull @Param("pacidfk") String pacidfk) throws Exception;
 
-
-    @Query(value ="SELECT  ng.*  FROM  salud_niveles_glucosa ng "
-            + "WHERE ng.pac_id_fk =':pacidfk' and gluperiodo  between :periodo and :periodo2 and ng.glu_fecha_hora between ':fechaInicio' and ':fechaFin' ",nativeQuery=true)
-    List<SaludNivGluc> findByfecha(@NotNull @Param("pacidfk") String pacidfk, @NotNull @Param ("periodo") int periodo, @NotNull @Param ("periodo2") int periodo2, @NotNull @Param ("fechaInicio") Timestamp fechaInicio, @NotNull @Param ("fechaFin") Timestamp  fechaFin)throws Exception;
-
+    @Query(value = "SELECT ng.* FROM salud_niveles_glucosa ng " +
+            "WHERE ng.pac_id_fk = :pacidfk " +
+            "AND ng.gluperiodo BETWEEN :periodo AND :periodo2 " +
+            "AND ng.glu_fecha_hora BETWEEN :fechaInicio AND :fechaFin",
+            nativeQuery = true)
+    List<SaludNivGluc> findByfecha(@NotNull @Param("pacidfk") String pacidfk,
+                                   @NotNull @Param("periodo") int periodo,
+                                   @NotNull @Param("periodo2") int periodo2,
+                                   @NotNull @Param("fechaInicio") Timestamp fechaInicio,
+                                   @NotNull @Param("fechaFin") Timestamp fechaFin) throws Exception;
 
     SaludNivGluc findByPacidfk( String pacidfk) throws Exception;
 

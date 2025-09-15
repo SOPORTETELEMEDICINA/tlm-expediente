@@ -258,14 +258,19 @@ public class SaludNivCovidServiceImpl implements SaludNivCovidService {
                             try {
 
                                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-                                Date inicialDate = sdf.parse(fechaInicio);
-                                Date finalDate = sdf.parse(fechaFin);
-                                logger.info("parametros:  - inicialdate: {} - finaldate: {}- Fechainicio: {} - fechafin: {}",
-                                        inicialDate,finalDate,fechaInicio, fechaFin);
+                                Date start = sdf.parse(fechaInicio);
+                                Calendar c = Calendar.getInstance();
+                                c.setTime(sdf.parse(fechaFin));
+                                c.add(Calendar.DAY_OF_MONTH, 1);
+                                Date endExclusive = c.getTime();
 
-                                tc = (tc != null) ?
-                                        cb.and(tc, cb.greaterThanOrEqualTo(root.get("covidfechahora"), inicialDate), cb.lessThanOrEqualTo(root.get("covidfechahora"), finalDate)) :
-                                        cb.and(cb.greaterThanOrEqualTo(root.get("covidfechahora"), inicialDate), cb.lessThanOrEqualTo(root.get("covidfechahora"), finalDate));
+                                tc = (tc != null)
+                                        ? cb.and(tc,
+                                        cb.greaterThanOrEqualTo(root.get("covidfechahora"), start),
+                                        cb.lessThan(root.get("covidfechahora"), endExclusive))
+                                        : cb.and(
+                                        cb.greaterThanOrEqualTo(root.get("covidfechahora"), start),
+                                        cb.lessThan(root.get("covidfechahora"), endExclusive));
                             } catch (Exception ex) {
                                 logger.warn("Error al convertir fechas", ex);
                             }

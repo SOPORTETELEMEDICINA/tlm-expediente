@@ -16,16 +16,21 @@ import java.util.List;
 @Repository
 public interface SaludNivPreartRepository extends JpaRepository<SaludNivPreart, Long>, JpaSpecificationExecutor {
 
-    @Query(value ="SELECT  npa.*  FROM  salud_niveles_presion_arterial npa "
-            + "WHERE npa.pac_id_fk =':pacidfk' ",nativeQuery=true)
-    List<SaludNivPreart> findBypapac(@NotNull @Param("pacidfk") String pacidfk)throws Exception;
+    @Query(value = "SELECT np.* FROM salud_niveles_presion_arterial np " +
+            "WHERE np.pac_id_fk = :pacidfk",
+            nativeQuery = true)
+    List<SaludNivPreart> findByPapac(@Param("pacidfk") String pacidfk);
 
-
-    @Query(value ="SELECT  npa.*  FROM  salud_niveles_presion_arterial npa "
-            + "WHERE npa.pac_id_fk =':pacidfk' and npa.paperiodo  between :periodo and :periodo2 and npa.pa_fecha_hora between ':fechaInicio' and ':fechaFin' ",nativeQuery=true)
-    List<SaludNivPreart> findByfecha(@NotNull @Param("pacidfk") String pacidfk, @NotNull @Param ("periodo") int periodo, @NotNull @Param ("periodo2") int periodo2, @NotNull @Param ("fechaInicio") Timestamp  fechaInicio, @NotNull @Param ("fechaFin") Timestamp fechaFin)throws Exception;
-
-
+    @Query(value = "SELECT np.* FROM salud_niveles_presion_arterial np " +
+            "WHERE np.pac_id_fk = :pacidfk " +
+            "AND np.paperiodo BETWEEN :periodo AND :periodo2 " +
+            "AND np.pa_fecha_hora BETWEEN :fechaInicio AND :fechaFin",
+            nativeQuery = true)
+    List<SaludNivPreart> findByfecha(@Param("pacidfk") String pacidfk,
+                                     @Param("periodo") int periodo,
+                                     @Param("periodo2") int periodo2,
+                                     @Param("fechaInicio") java.sql.Timestamp fechaInicio,
+                                     @Param("fechaFin") java.sql.Timestamp fechaFin);
 
     SaludNivPreart findByPacidfk( String pacidfk) throws Exception;
 

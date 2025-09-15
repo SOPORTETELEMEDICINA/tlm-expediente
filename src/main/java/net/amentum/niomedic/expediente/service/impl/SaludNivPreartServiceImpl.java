@@ -239,12 +239,20 @@ public class SaludNivPreartServiceImpl implements SaludNivPreartService {
                         if (fechaInicio != null && fechaFin != null) {
                             try {
                                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-                                Date inicialDate = sdf.parse(fechaInicio);
-                                Date finalDate = sdf.parse(fechaFin);
+                                Date start = sdf.parse(fechaInicio);
+                                Calendar c = Calendar.getInstance();
+                                c.setTime(sdf.parse(fechaFin));
+                                c.add(Calendar.DAY_OF_MONTH, 1);
+                                Date endExclusive = c.getTime();
 
-                                tc = (tc != null) ?
-                                        cb.and(tc, cb.greaterThanOrEqualTo(root.get("pafechahora"), inicialDate), cb.lessThanOrEqualTo(root.get("pafechahora"), finalDate)) :
-                                        cb.and(cb.greaterThanOrEqualTo(root.get("pafechahora"), inicialDate), cb.lessThanOrEqualTo(root.get("pafechahora"), finalDate));
+                                tc = (tc != null)
+                                        ? cb.and(tc,
+                                        cb.greaterThanOrEqualTo(root.get("pafechahora"), start),
+                                        cb.lessThan(root.get("pafechahora"), endExclusive))
+                                        : cb.and(
+                                        cb.greaterThanOrEqualTo(root.get("pafechahora"), start),
+                                        cb.lessThan(root.get("pafechahora"), endExclusive));
+
                             } catch (Exception ex) {
                                 logger.warn("Error al convertir fechas", ex);
                             }

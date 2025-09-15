@@ -246,11 +246,21 @@ public class SaludNivGlucServiceImpl implements SaludNivGlucService {
                             try {
                                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
                                 Date inicialDate = sdf.parse(fechaInicio);
-                                Date finalDate = sdf.parse(fechaFin);
 
-                                tc = (tc != null) ?
-                                        cb.and(tc, cb.greaterThanOrEqualTo(root.get("glufechahora"), inicialDate), cb.lessThanOrEqualTo(root.get("glufechahora"), finalDate)) :
-                                        cb.and(cb.greaterThanOrEqualTo(root.get("glufechahora"), inicialDate), cb.lessThanOrEqualTo(root.get("glufechahora"), finalDate));
+                                // mover fechaFin al día siguiente 00:00:00 para usar "<"
+                                Calendar cal = Calendar.getInstance();
+                                cal.setTime(sdf.parse(fechaFin));
+                                cal.add(Calendar.DATE, 1);
+                                Date finalExclusive = cal.getTime();
+
+                                // ...y arma el predicado con >= inicio y < (fin + 1 día)
+                                tc = (tc != null)
+                                        ? cb.and(tc,
+                                        cb.greaterThanOrEqualTo(root.get("glufechahora"), inicialDate),
+                                        cb.lessThan(root.get("glufechahora"), finalExclusive))
+                                        : cb.and(
+                                        cb.greaterThanOrEqualTo(root.get("glufechahora"), inicialDate),
+                                        cb.lessThan(root.get("glufechahora"), finalExclusive));
                             } catch (Exception ex) {
                                 logger.warn("Error al convertir fechas", ex);
                             }
