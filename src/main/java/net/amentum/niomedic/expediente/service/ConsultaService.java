@@ -32,11 +32,24 @@ public interface ConsultaService {
    void updateConsultaEstatus(ConsultaView consultaView) throws ConsultaException;
    
    //nuevas rest
-   ConsultaView getConsultaById(Long idConsulta)throws ConsultaException; 
-   
-   Page<ConsultaView> getConsultaSearch(UUID idPaciente, List<Long> idUsuario,UUID idMedico,Integer idTipoConsulta,List<Integer> idStatusConsulta,Integer page, Integer size, String orderColumn, String orderType, Long startDate, Long endDate) throws ConsultaException;
-   
-   void consultaStart(Long idConsulta,CatEstadoConsultaView catEstadoConsultaView) throws ConsultaException;
+   ConsultaView getConsultaById(Long idConsulta)throws ConsultaException;
+
+    Page<ConsultaView> getConsultaSearch(
+            UUID idPaciente,
+            List<Long> idUsuario,
+            UUID idMedico,
+            Integer idTipoConsulta,
+            List<Integer> idStatusConsulta,
+            Integer page,
+            Integer size,
+            String orderColumn,
+            String orderType,
+            Long startDate,
+            Long endDate,
+            Integer idGroup // <-- NUEVO
+    ) throws ConsultaException;
+
+    void consultaStart(Long idConsulta,CatEstadoConsultaView catEstadoConsultaView) throws ConsultaException;
    
    void consultaCancel(Long idConsulta, CatEstadoConsultaView catEstadoConsultaView) throws ConsultaException;
    
@@ -61,4 +74,8 @@ public interface ConsultaService {
    Page<HashMap<String, Object>> getConsultaByEstatusMedico(UUID idMedico, Integer page, Integer size, String orderColumn, String orderType, Integer idGroup) throws ConsultaException;
 
    Page<HashMap<String, Object>> getConsultaByEstatus(Integer page, Integer size, String orderColumn, String orderType, Integer idGroup) throws ConsultaException;
+    // Firma nueva para obtener la penúltima
+    ConsultaView getPenultimaConsulta(UUID idPaciente, Integer idGroup) throws ConsultaException;
+
+
 }

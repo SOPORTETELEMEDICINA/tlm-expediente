@@ -61,4 +61,8 @@ public interface ConsultaRepository extends JpaRepository<Consulta, Long>, JpaSp
 	@Query(value ="select count(c.*)  from consulta c where c.id_estado_consulta = 4 and c.id_medico=:idMedico and c.id_group = :idGroup",nativeQuery=true)
 	Integer countEstadoConsultaOtrasByMedico(@NotNull @Param("idMedico") UUID idMedico, @Param("idGroup") Integer idGroup) throws Exception;
 
+    // IMPORTANTE: pegar dentro de la interfaz del repositorio
+    List<Consulta> findTop2ByIdPacienteAndIdGroupOrderByFechaConsultaDesc(UUID idPaciente, Integer idGroup);
+
+
 }

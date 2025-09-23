@@ -486,86 +486,112 @@ public class ConsultaServiceImpl implements ConsultaService {
 		}
 	}
 
-	public Page<ConsultaView> getConsultaSearch(UUID idPaciente, List<Long> idUsuario, UUID idMedico, Integer idTipoConsulta, List<Integer> idStatusConsulta, Integer page, Integer size, String orderColumn, String orderType, Long startDate, Long endDate) throws ConsultaException {
-		try {
-			logger.info("getConsultaSearch() - Obtener listado Consulta paginable: - idPaciente {} - idUsuario:{} - idMedico {} - page {} - size: {} - orderColumn: {} - orderType: {} - startDate: {}  - endDate: {}",
-					idPaciente, idUsuario, idMedico, page, size, orderColumn, orderType, startDate, endDate);
-			List<ConsultaView> consultaViewList = new ArrayList<>();
-			Page<Consulta> consultaPage = null;
-			Sort sort = new Sort(Sort.Direction.ASC, (String) colOrderSearch.get("idPaciente"));
-			if ((orderColumn != null && !orderColumn.isEmpty()) && orderType != null) {
-				if (orderType.equalsIgnoreCase("asc")) {
-					sort = new Sort(Sort.Direction.ASC, (String) colOrderSearch.get(orderColumn));
-				} else {
-					sort = new Sort(Sort.Direction.DESC, (String) colOrderSearch.get(orderColumn));
-				}
+    public Page<ConsultaView> getConsultaSearch(
+            UUID idPaciente,
+            List<Long> idUsuario,
+            UUID idMedico,
+            Integer idTipoConsulta,
+            List<Integer> idStatusConsulta,
+            Integer page,
+            Integer size,
+            String orderColumn,
+            String orderType,
+            Long startDate,
+            Long endDate,
+            Integer idGroup // <-- NUEVO
+    ) throws ConsultaException {
+        try {
+            logger.info("getConsultaSearch() - Obtener listado Consulta paginable: - idPaciente {} - idUsuario:{} - idMedico {} - page {} - size: {} - orderColumn: {} - orderType: {} - startDate: {}  - endDate: {} - idGroup: {}",
+                    idPaciente, idUsuario, idMedico, page, size, orderColumn, orderType, startDate, endDate, idGroup);
 
-			}
-			PageRequest request = new PageRequest(page, size, sort);
-			final UUID patternSearch = idPaciente;
-			final UUID patternSearchMedico = idMedico;
-			Specifications<Consulta> spec = Specifications.where(
-					(root, query, cb) -> {
-						Predicate tc = null;
-						Expression<Long> usuario = root.get("idUsuario");
-						Expression<Long> estadoConsulta = root.get("idEstadoConsulta");
-						//		             paciente
-						if (idPaciente != null) {
-							tc = cb.equal(root.get("idPaciente"), patternSearch);
-						}
-						//		             medico
-						if (idMedico != null) {
+            List<ConsultaView> consultaViewList = new ArrayList<>();
+            Page<Consulta> consultaPage;
+            Sort sort = new Sort(Sort.Direction.ASC, (String) colOrderSearch.get("idPaciente"));
+            if ((orderColumn != null && !orderColumn.isEmpty()) && orderType != null) {
+                if (orderType.equalsIgnoreCase("asc")) {
+                    sort = new Sort(Sort.Direction.ASC, (String) colOrderSearch.get(orderColumn));
+                } else {
+                    sort = new Sort(Sort.Direction.DESC, (String) colOrderSearch.get(orderColumn));
+                }
+            }
 
-							tc = (tc != null ?
-									cb.and(tc, cb.equal(root.get("idMedico"), patternSearchMedico)) :
-										cb.equal(root.get("idMedico"), patternSearchMedico));
-						}
-						//		             fechas
-						if (startDate != null && endDate != null) {
-							try {
-								SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-								Date inicialDate = parseDate(sdf.format(startDate) + " 00:00:00", TimeUtils.LONG_DATE);
-								Date finalDate = parseDate(sdf.format(endDate) + " 23:59:59", TimeUtils.LONG_DATE);
-								tc = (tc != null) ?
-										cb.and(tc, cb.greaterThanOrEqualTo(root.get("fechaConsulta"), inicialDate), cb.lessThanOrEqualTo(root.get("fechaConsulta"), finalDate)) :
-											cb.and(cb.greaterThanOrEqualTo(root.get("fechaConsulta"), inicialDate), cb.lessThanOrEqualTo(root.get("fechaConsulta"), finalDate));
-							} catch (Exception ex) {
-								logger.warn("Error al convertir fechas", ex);
-							}
-						}
-					/*	if (idUsuario != null && !idUsuario.isEmpty()) {
-							tc = (tc != null ? cb.and(tc, usuario.in(idUsuario)) : usuario.in(idUsuario));
-						}*/
-						if (idStatusConsulta != null && !idStatusConsulta.isEmpty()) {
+            PageRequest request = new PageRequest(page, size, sort);
+            final UUID patternSearch = idPaciente;
+            final UUID patternSearchMedico = idMedico;
 
-							tc = (tc != null ? cb.and(tc, estadoConsulta.in(idStatusConsulta)) : estadoConsulta.in(idStatusConsulta));
-						}
-						if (idTipoConsulta != null) {
-							tc = (tc != null ? cb.and(tc, cb.equal(root.get("idTipoConsulta"), idTipoConsulta)) : cb.equal(root.get("idTipoConsulta"), idTipoConsulta));
-						}
-						return tc;
-					}
-					);
+            Specifications<Consulta> spec = Specifications.where(
+                    (root, query, cb) -> {
+                        Predicate tc = null;
+                        Expression<Long> estadoConsulta = root.get("idEstadoConsulta");
 
-			if (spec == null) {
-				consultaPage = consultaRepository.findAll(request);
-			} else {
-				consultaPage = consultaRepository.findAll(spec, request);
-			}
+                        // paciente
+                        if (idPaciente != null) {
+                            tc = cb.equal(root.get("idPaciente"), patternSearch);
+                        }
+                        // medico
+                        if (idMedico != null) {
+                            tc = (tc != null)
+                                    ? cb.and(tc, cb.equal(root.get("idMedico"), patternSearchMedico))
+                                    : cb.equal(root.get("idMedico"), patternSearchMedico);
+                        }
+                        // rango de fechas
+                        if (startDate != null && endDate != null) {
+                            try {
+                                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+                                Date inicialDate = parseDate(sdf.format(startDate) + " 00:00:00", TimeUtils.LONG_DATE);
+                                Date finalDate   = parseDate(sdf.format(endDate)   + " 23:59:59", TimeUtils.LONG_DATE);
+                                tc = (tc != null)
+                                        ? cb.and(tc,
+                                        cb.greaterThanOrEqualTo(root.get("fechaConsulta"), inicialDate),
+                                        cb.lessThanOrEqualTo(root.get("fechaConsulta"), finalDate))
+                                        : cb.and(
+                                        cb.greaterThanOrEqualTo(root.get("fechaConsulta"), inicialDate),
+                                        cb.lessThanOrEqualTo(root.get("fechaConsulta"), finalDate));
+                            } catch (Exception ex) {
+                                logger.warn("Error al convertir fechas", ex);
+                            }
+                        }
+                        // estatus(es)
+                        if (idStatusConsulta != null && !idStatusConsulta.isEmpty()) {
+                            tc = (tc != null)
+                                    ? cb.and(tc, estadoConsulta.in(idStatusConsulta))
+                                    : estadoConsulta.in(idStatusConsulta);
+                        }
+                        // tipo consulta
+                        if (idTipoConsulta != null) {
+                            tc = (tc != null)
+                                    ? cb.and(tc, cb.equal(root.get("idTipoConsulta"), idTipoConsulta))
+                                    : cb.equal(root.get("idTipoConsulta"), idTipoConsulta);
+                        }
+                        // NUEVO: filtro por grupo
+                        if (idGroup != null) {
+                            tc = (tc != null)
+                                    ? cb.and(tc, cb.equal(root.get("idGroup"), idGroup))
+                                    : cb.equal(root.get("idGroup"), idGroup);
+                        }
 
-			consultaPage.getContent().forEach(consulta -> {
-				consultaViewList.add(consultaConverter.toView(consulta, Boolean.FALSE));
-			});
-			PageImpl<ConsultaView> consultaViewPage = new PageImpl<ConsultaView>(consultaViewList, request, consultaPage.getTotalElements());
-			return consultaViewPage;
-		} catch (Exception ex) {
-			ConsultaException cee = new ConsultaException("Ocurrio un error al seleccionar lista Consulta paginable", ConsultaException.LAYER_SERVICE, ConsultaException.ACTION_SELECT);
-			logger.error(ExceptionServiceCode.GROUP + "- Error al tratar de seleccionar lista Consulta paginable - CODE: {}-{}", cee.getExceptionCode(), ex);
-			throw cee;
-		}
-	}
+                        return tc;
+                    }
+            );
 
-	@Transactional(readOnly = false, rollbackFor = {ConsultaException.class})
+            consultaPage = (spec == null)
+                    ? consultaRepository.findAll(request)
+                    : consultaRepository.findAll(spec, request);
+
+            // IMPORTANTE: usar TRUE para igualar el JSON de "page"
+            consultaPage.getContent().forEach(consulta -> {
+                consultaViewList.add(consultaConverter.toView(consulta, Boolean.TRUE));
+            });
+
+            return new PageImpl<>(consultaViewList, request, consultaPage.getTotalElements());
+        } catch (Exception ex) {
+            ConsultaException cee = new ConsultaException("Ocurrio un error al seleccionar lista Consulta paginable", ConsultaException.LAYER_SERVICE, ConsultaException.ACTION_SELECT);
+            logger.error(ExceptionServiceCode.GROUP + "- Error al tratar de seleccionar lista Consulta paginable - CODE: {}-{}", cee.getExceptionCode(), ex);
+            throw cee;
+        }
+    }
+
+    @Transactional(readOnly = false, rollbackFor = {ConsultaException.class})
 	@Override
 	public void consultaStart(Long idConsulta, CatEstadoConsultaView catEstadoConsultaView) throws ConsultaException {
 		try {
@@ -1840,6 +1866,60 @@ public class ConsultaServiceImpl implements ConsultaService {
 			throw new ConsultaException(ex.getMessage(), ConsultaException.LAYER_SERVICE, ConsultaException.ACTION_SELECT);
 		}
 	}
+
+
+    @Override
+    public ConsultaView getPenultimaConsulta(UUID idPaciente, Integer idGroup) throws ConsultaException {
+        try {
+            logger.info("Service: getPenultimaConsulta - idPaciente: {} - idGroup: {}", idPaciente, idGroup);
+
+            if (idPaciente == null || idGroup == null) {
+                throw new ConsultaException(
+                        "Parámetros inválidos para obtener penúltima consulta",
+                        ConsultaException.LAYER_SERVICE,
+                        ConsultaException.ACTION_SELECT
+                );
+            }
+
+            // Tomamos las 2 más recientes
+            List<Consulta> top2 = consultaRepository
+                    .findTop2ByIdPacienteAndIdGroupOrderByFechaConsultaDesc(idPaciente, idGroup);
+
+            if (top2 == null || top2.isEmpty()) {
+                // No hay ninguna
+                throw new ConsultaException(
+                        "El paciente no tiene consultas registradas",
+                        ConsultaException.LAYER_SERVICE,
+                        ConsultaException.ACTION_SELECT
+                );
+            }
+
+            if (top2.size() == 1) {
+                // Sólo hay una (la “última”); no existe penúltima
+                throw new ConsultaException(
+                        "No existe penúltima consulta (sólo hay una consulta registrada)",
+                        ConsultaException.LAYER_SERVICE,
+                        ConsultaException.ACTION_SELECT
+                );
+            }
+
+            // La penúltima es el índice 1 (la segunda más reciente)
+            Consulta penultima = top2.get(1);
+
+            // Usa el mismo “shape” que devuelves en page/ultima (ajusta TRUE/FALSE si en tu proyecto varía)
+            return consultaConverter.toView(penultima, Boolean.TRUE);
+        } catch (ConsultaException ce) {
+            throw ce;
+        } catch (Exception ex) {
+            ConsultaException ce = new ConsultaException(
+                    "Ocurrió un error al obtener la penúltima consulta",
+                    ConsultaException.LAYER_SERVICE,
+                    ConsultaException.ACTION_SELECT
+            );
+            logger.error("Error getPenultimaConsulta - CODE:{} - {}", ce.getExceptionCode(), ex.getMessage(), ex);
+            throw ce;
+        }
+    }
 
 
 }

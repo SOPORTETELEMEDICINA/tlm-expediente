@@ -182,40 +182,49 @@ public class ConsultaRest extends BaseController {
 	}
 
 
-	@RequestMapping(value = "search", method = RequestMethod.GET)
-	@ResponseStatus(HttpStatus.OK)
-	public Page<ConsultaView> getConsultasearch(@RequestParam(required = false, defaultValue = "") String idPaciente,
-			@RequestParam(required = false) List<Long> idUsuario,
-			@RequestParam(required = false) String idMedico,
-			@RequestParam(required = false) List<Integer> idEstadoConsulta,
-			@RequestParam(required = false) Integer idTipoConsulta,
-			@RequestParam(required = false) Integer page,
-			@RequestParam(required = false) Integer size,
-			@RequestParam(required = false) String orderColumn,
-			@RequestParam(required = false) String orderType,
-			@RequestParam(required = false) Long startDate,
-			@RequestParam(required = false) Long endDate) throws ConsultaException {
-		logger.info("- Obtener listado Consulta paginable: - idPaciente {} - idMedico {} - page {} - size: {} - orderColumn: {} - orderType: {} - startDate: {}  - endDate: {}",
-				idPaciente, idMedico, page, size, orderColumn, orderType, startDate, endDate);
-		if (page == null)
-			page = 0;
-		if (size == null)
-			size = 10;
-		if (orderType == null || orderType.isEmpty()) {
-			orderType = "asc";
-		}
-		UUID uidMedico =null;
-		UUID uidPaciente= null;
-		if(idPaciente!=null && !idPaciente.isEmpty()) {
-			uidPaciente = UUID.fromString(idPaciente);
-		}
-		if(idMedico!=null && !idMedico.isEmpty()) {
-			uidMedico = UUID.fromString(idMedico);
-		}
-		return consultaService.getConsultaSearch(uidPaciente, idUsuario, uidMedico ,idTipoConsulta,idEstadoConsulta,page, size, orderColumn, orderType, startDate, endDate);
-	}
+    @RequestMapping(value = "search", method = RequestMethod.GET)
+    @ResponseStatus(HttpStatus.OK)
+    public Page<ConsultaView> getConsultasearch(
+            @RequestParam(required = false, defaultValue = "") String idPaciente,
+            @RequestParam(required = false) List<Long> idUsuario,
+            @RequestParam(required = false) String idMedico,
+            @RequestParam(required = false) List<Integer> idEstadoConsulta,
+            @RequestParam(required = false) Integer idTipoConsulta,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String orderColumn,
+            @RequestParam(required = false) String orderType,
+            @RequestParam(required = false) Long startDate,
+            @RequestParam(required = false) Long endDate,
+            @RequestParam(required = false) Integer idGroup // <-- NUEVO
+    ) throws ConsultaException {
+        logger.info("- Obtener listado Consulta (search): - idPaciente {} - idMedico {} - page {} - size: {} - orderColumn: {} - orderType: {} - startDate: {} - endDate: {} - idGroup: {}",
+                idPaciente, idMedico, page, size, orderColumn, orderType, startDate, endDate, idGroup);
 
-	@RequestMapping(value = "{idConsulta}", method = RequestMethod.GET)
+        if (page == null) page = 0;
+        if (size == null) size = 10;
+        if (orderType == null || orderType.isEmpty()) {
+            orderType = "asc";
+        }
+
+        UUID uidMedico = null;
+        UUID uidPaciente = null;
+        if (idPaciente != null && !idPaciente.isEmpty()) {
+            uidPaciente = UUID.fromString(idPaciente);
+        }
+        if (idMedico != null && !idMedico.isEmpty()) {
+            uidMedico = UUID.fromString(idMedico);
+        }
+
+        // ahora pasamos idGroup para que filtre y regrese el mismo JSON que "page"
+        return consultaService.getConsultaSearch(
+                uidPaciente, idUsuario, uidMedico, idTipoConsulta, idEstadoConsulta,
+                page, size, orderColumn, orderType, startDate, endDate, idGroup
+        );
+    }
+
+
+    @RequestMapping(value = "{idConsulta}", method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
 	public ConsultaView getConsultaById(@PathVariable() Long  idConsulta) throws ConsultaException {
 		try {
@@ -274,18 +283,22 @@ public class ConsultaRest extends BaseController {
 		consultaService.signosVitales(idConsulta, signosVitales);
 	}
 
-	@RequestMapping(value="ultima/{idPaciente}", method=RequestMethod.GET)
-	@ResponseStatus(HttpStatus.OK)
-	public ConsultaView ultimaConsulta(@PathVariable("idPaciente") String idPaciente,
-									   @RequestParam("idGroup") Integer idGroup)throws ConsultaException {
-		UUID uidPaciente= null;
-		if(idPaciente!=null && !idPaciente.isEmpty())
-			uidPaciente = UUID.fromString(idPaciente);
-		logger.info("get - ultimaConsulta()- Obteniendo ultima consulta del paciente con el id:{} - idGroup:{}",idPaciente, idGroup);
-		return consultaService.getUltimaConsulta(uidPaciente, idGroup);
-	}
+    @RequestMapping(value = "ultima/{idPaciente}", method = RequestMethod.GET)
+    @ResponseStatus(HttpStatus.OK)
+    public ConsultaView ultimaConsulta(@PathVariable("idPaciente") String idPaciente,
+                                       @RequestParam("idGroup") Integer idGroup) throws ConsultaException {
+        UUID uidPaciente = null;
+        if (idPaciente != null && !idPaciente.isEmpty()) {
+            uidPaciente = UUID.fromString(idPaciente);
+        }
+        logger.info("get - ultimaConsulta() [penúltima en realidad] - idPaciente:{} - idGroup:{}", idPaciente, idGroup);
 
-	@RequestMapping(value="confirmar/{idConsulta}", method=RequestMethod.PUT)
+        // Ahora devolvemos la PENÚLTIMA
+        return consultaService.getPenultimaConsulta(uidPaciente, idGroup);
+    }
+
+
+    @RequestMapping(value="confirmar/{idConsulta}", method=RequestMethod.PUT)
 	@ResponseStatus(HttpStatus.OK)
 	public void confirmarConsulta(@PathVariable("idConsulta")Long idConsulta,@RequestBody @Valid CatEstadoConsultaView catEstadoConsultaView) throws ConsultaException {
 		logger.info("put - confirmarConsulta() - Cambiando la consulta a estado Confirmado, idConsulta:{}",idConsulta);
