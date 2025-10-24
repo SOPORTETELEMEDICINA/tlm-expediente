@@ -64,5 +64,14 @@ public interface ConsultaRepository extends JpaRepository<Consulta, Long>, JpaSp
     // IMPORTANTE: pegar dentro de la interfaz del repositorio
     List<Consulta> findTop2ByIdPacienteAndIdGroupOrderByFechaConsultaDesc(UUID idPaciente, Integer idGroup);
 
+    @org.springframework.data.jpa.repository.Query(
+            value = "SELECT id_medico FROM consulta " +
+                    "WHERE id_paciente = :pacId " +
+                    "ORDER BY fecha_consulta DESC, id_consulta DESC " +
+                    "LIMIT 1",
+            nativeQuery = true
+    )
+    java.util.UUID findUltimoMedicoPorPaciente(@org.springframework.data.repository.query.Param("pacId") String pacId);
+
 
 }

@@ -1,6 +1,5 @@
 package net.amentum.niomedic.expediente.service.impl;
 
-
 import net.amentum.niomedic.expediente.converter.SaludNivGlucConverter;
 import net.amentum.niomedic.expediente.exception.ExceptionServiceCode;
 import net.amentum.niomedic.expediente.exception.SaludNivGlucException;
@@ -25,6 +24,10 @@ import javax.persistence.criteria.Predicate;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+// NUEVO (si no los tienes):
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
 
 @Service
 @Transactional(readOnly = true)
@@ -43,9 +46,6 @@ public class SaludNivGlucServiceImpl implements SaludNivGlucService {
         colOrderNames.put("gluperiodo","gluperiodo");
         colOrderNames.put("glufechahora","glufechahora");
         colOrderNames.put("glumedida","glumedida");
-
-
-
     }
 
     @Autowired
@@ -58,6 +58,14 @@ public class SaludNivGlucServiceImpl implements SaludNivGlucService {
         this.SaludNivGlucConverter = SaludNivGlucConverter;
     }
 
+    // NUEVO:
+    @Autowired
+    private net.amentum.niomedic.expediente.persistence.SaludIndGlucRepository indGlucRepo;
+
+    @Autowired
+    private net.amentum.niomedic.expediente.service.notifications.TelemetryAlertService telemetryAlertService;
+
+
     @Transactional(readOnly = false, rollbackFor = {SaludNivGlucException.class})
     @Override
     public void createSaludNivGluc(SaludNivGlucView SaludNivGlucView) throws SaludNivGlucException {
@@ -65,6 +73,53 @@ public class SaludNivGlucServiceImpl implements SaludNivGlucService {
             SaludNivGluc SaludNivGluc = SaludNivGlucConverter.toEntity(SaludNivGlucView, new SaludNivGluc(), Boolean.FALSE);
             logger.debug("Insertar nuevo Niveles Glucosa: {}", SaludNivGluc);
             SaludNivGlucRepository.save(SaludNivGluc);
+            // === ALERTA TELEMETRÍA: GLUCOSA ===
+            try {
+                // 1) Paciente (en tu BD es VARCHAR)
+                final String pacIdStr = SaludNivGluc.getPacidfk();
+
+                // 2) Fecha del nivel (tu entidad guarda java.util.Date)
+                final Date fechaMedicion = SaludNivGluc.getGlufechahora();
+                final LocalDateTime fecha = (fechaMedicion != null)
+                        ? LocalDateTime.ofInstant(fechaMedicion.toInstant(), ZoneId.systemDefault())
+                        : LocalDateTime.now();
+
+                // 3) Valor medido
+                final Integer valor = (SaludNivGluc.getGlumedida() != null) ? SaludNivGluc.getGlumedida().intValue() : null;
+                if (valor == null) {
+                    logger.debug("Nivel de glucosa sin 'glumedida' — no se evalúa alerta.");
+                    return;
+                }
+
+                // 4) Umbrales de INDICACIONES (última por paciente)
+                final Integer[] urgBaja = {null};
+                final Integer[] alertaAlta = {null};
+                final Integer[] urgAlta = {null};
+
+                indGlucRepo.findUltimaPorPaciente(pacIdStr).ifPresent(ig -> {
+                    // Usa LOS GETTERS QUE TENGA TU ENTIDAD real
+                    urgBaja[0]    = ig.getUrgenciabaja();  // int o Integer
+                    alertaAlta[0] = ig.getAlertaalta();
+                    urgAlta[0]    = ig.getUrgenciaalta();
+                });
+
+                if (urgBaja[0] != null || alertaAlta[0] != null || urgAlta[0] != null) {
+                    telemetryAlertService.evaluarGlucosa(
+                            pacIdStr,
+                            valor,
+                            urgBaja[0],
+                            alertaAlta[0],
+                            urgAlta[0],
+                            fecha,
+                            null /*idGroup*/
+                    );
+                } else {
+                    logger.debug("Sin indicaciones de glucosa para paciente {} — no se emite alerta.", pacIdStr);
+                }
+            } catch (Exception ex) {
+                logger.warn("No se pudo evaluar/emitir alerta GLUCOSA (create).", ex);
+            }
+
         } catch (DataIntegrityViolationException dive) {
             SaludNivGlucException ncE = new SaludNivGlucException("No fue posible agregar Niveles Glucosa", SaludNivGlucException.LAYER_DAO, SaludNivGlucException.ACTION_INSERT);
             ncE.addError("Ocurrio un error al agregar Niveles Glucosa");
@@ -91,6 +146,40 @@ public class SaludNivGlucServiceImpl implements SaludNivGlucService {
             SaludNivGluc = SaludNivGlucConverter.toEntity(SaludNivGlucView, SaludNivGluc, Boolean.TRUE);
             logger.debug("Editar Niveles Glucosa: {}", SaludNivGluc);
             SaludNivGlucRepository.save(SaludNivGluc);
+
+            // === ALERTA TELEMETRÍA: GLUCOSA ===
+            try {
+                final String pacIdStr = SaludNivGluc.getPacidfk();
+                final Date fechaMedicion = SaludNivGluc.getGlufechahora();
+                final LocalDateTime fecha = (fechaMedicion != null)
+                        ? LocalDateTime.ofInstant(fechaMedicion.toInstant(), ZoneId.systemDefault())
+                        : LocalDateTime.now();
+
+                final Integer valor = (SaludNivGluc.getGlumedida() != null) ? SaludNivGluc.getGlumedida().intValue() : null;
+                if (valor == null) {
+                    logger.debug("Nivel de glucosa sin 'glumedida' — no se evalúa alerta.");
+                    return;
+                }
+
+                final Integer[] urgBaja = {null};
+                final Integer[] alertaAlta = {null};
+                final Integer[] urgAlta = {null};
+
+                indGlucRepo.findUltimaPorPaciente(pacIdStr).ifPresent(ig -> {
+                    urgBaja[0]    = ig.getUrgenciabaja();
+                    alertaAlta[0] = ig.getAlertaalta();
+                    urgAlta[0]    = ig.getUrgenciaalta();
+                });
+
+                if (urgBaja[0] != null || alertaAlta[0] != null || urgAlta[0] != null) {
+                    telemetryAlertService.evaluarGlucosa(pacIdStr, valor, urgBaja[0], alertaAlta[0], urgAlta[0], fecha, null);
+                } else {
+                    logger.debug("Sin indicaciones de glucosa para paciente {} — no se emite alerta.", pacIdStr);
+                }
+            } catch (Exception ex) {
+                logger.warn("No se pudo evaluar/emitir alerta GLUCOSA (update).", ex);
+            }
+
         } catch (DataIntegrityViolationException dive) {
             SaludNivGlucException ncE = new SaludNivGlucException("No fue posible editar Niveles Glucosa", SaludNivGlucException.LAYER_DAO, SaludNivGlucException.ACTION_UPDATE);
             ncE.addError("Ocurrió un error al editar Niveles Glucosa");

@@ -29,6 +29,11 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.sql.Timestamp;
+import java.util.Date;
+
 
 
 @Service
@@ -54,6 +59,10 @@ public class SaludNivCovidServiceImpl implements SaludNivCovidService {
 
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private net.amentum.niomedic.expediente.service.notifications.TelemetryAlertService telemetryAlertService;
+
+
     @Autowired
     public void setSaludNivCovidRepository(SaludNivCovidRepository SaludNivCovidRepository) {
         this.SaludNivCovidRepository = SaludNivCovidRepository;
@@ -71,6 +80,71 @@ public class SaludNivCovidServiceImpl implements SaludNivCovidService {
             SaludNivCovid SaludNivCovid = SaludNivCovidConverter.toEntity(SaludNivCovidView, new SaludNivCovid(), Boolean.FALSE);
             logger.debug("Insertar nuevo Niveles Covid: {}", SaludNivCovid);
             SaludNivCovidRepository.save(SaludNivCovid);
+            // === ALERTA TELEMETRÍA: COVID ===
+// Reglas fijas: temp >= 39  |  SpO2 < 90  |  pulso >= 120
+            try {
+                // 1) Paciente (VARCHAR en BD)
+                final String pacIdStr = SaludNivCovid.getPacidfk();
+
+                // 2) Fecha/hora del registro — intentamos nombre de getter más común:
+                LocalDateTime fecha = LocalDateTime.now();
+                try {
+                    // Variante 1: getCovidfechahora()
+                    Object fh = SaludNivCovid.getClass().getMethod("getCovidfechahora").invoke(SaludNivCovid);
+                    if (fh instanceof Timestamp) fecha = ((Timestamp) fh).toLocalDateTime();
+                    else if (fh instanceof Date) fecha = LocalDateTime.ofInstant(((Date) fh).toInstant(), ZoneId.systemDefault());
+                } catch (NoSuchMethodException nsme) {
+                    try {
+                        // Variante 2: getCovidFechaHora()
+                        Object fh = SaludNivCovid.getClass().getMethod("getCovidFechaHora").invoke(SaludNivCovid);
+                        if (fh instanceof Timestamp) fecha = ((Timestamp) fh).toLocalDateTime();
+                        else if (fh instanceof Date) fecha = LocalDateTime.ofInstant(((Date) fh).toInstant(), ZoneId.systemDefault());
+                    } catch (Exception ignore) { /* se queda fecha = now */ }
+                }
+
+                // 3) Lectura de valores (nombres más usados en tu código base)
+                Double temp = null;
+                Integer spo2 = null;
+                Integer pulso = null;
+
+                try {
+                    Object v = SaludNivCovid.getClass().getMethod("getCovidtempmedida").invoke(SaludNivCovid);
+                    if (v instanceof Number) temp = ((Number) v).doubleValue();
+                } catch (NoSuchMethodException ignore) {
+                    // alternativa camelCase
+                    try {
+                        Object v = SaludNivCovid.getClass().getMethod("getCovidTempMedida").invoke(SaludNivCovid);
+                        if (v instanceof Number) temp = ((Number) v).doubleValue();
+                    } catch (Exception ignore2) {}
+                }
+
+                try {
+                    Object v = SaludNivCovid.getClass().getMethod("getCovidspomedida").invoke(SaludNivCovid);
+                    if (v instanceof Number) spo2 = ((Number) v).intValue();
+                } catch (NoSuchMethodException ignore) {
+                    try {
+                        Object v = SaludNivCovid.getClass().getMethod("getCovidSpoMedida").invoke(SaludNivCovid);
+                        if (v instanceof Number) spo2 = ((Number) v).intValue();
+                    } catch (Exception ignore2) {}
+                }
+
+                try {
+                    Object v = SaludNivCovid.getClass().getMethod("getCovidpulsomedida").invoke(SaludNivCovid);
+                    if (v instanceof Number) pulso = ((Number) v).intValue();
+                } catch (NoSuchMethodException ignore) {
+                    try {
+                        Object v = SaludNivCovid.getClass().getMethod("getCovidPulsoMedida").invoke(SaludNivCovid);
+                        if (v instanceof Number) pulso = ((Number) v).intValue();
+                    } catch (Exception ignore2) {}
+                }
+
+                // 4) Dispara evaluación (el servicio resuelve al médico por la tabla consulta)
+                telemetryAlertService.evaluarCovid(pacIdStr, temp, spo2, pulso, fecha, null);
+
+            } catch (Exception ex) {
+                logger.warn("No se pudo evaluar/emitir alerta COVID.", ex);
+            }
+
         } catch (DataIntegrityViolationException dive) {
             SaludNivCovidException ncE = new SaludNivCovidException("No fue posible agregar Niveles Covid", SaludNivCovidException.LAYER_DAO, SaludNivCovidException.ACTION_INSERT);
             ncE.addError("Ocurrio un error al agregar Niveles Covid");
@@ -97,6 +171,71 @@ public class SaludNivCovidServiceImpl implements SaludNivCovidService {
             SaludNivCovid = SaludNivCovidConverter.toEntity(SaludNivCovidView, SaludNivCovid, Boolean.TRUE);
             logger.debug("Editar Niveles Covid: {}", SaludNivCovid);
             SaludNivCovidRepository.save(SaludNivCovid);
+            // === ALERTA TELEMETRÍA: COVID ===
+// Reglas fijas: temp >= 39  |  SpO2 < 90  |  pulso >= 120
+            try {
+                // 1) Paciente (VARCHAR en BD)
+                final String pacIdStr = SaludNivCovid.getPacidfk();
+
+                // 2) Fecha/hora del registro — intentamos nombre de getter más común:
+                LocalDateTime fecha = LocalDateTime.now();
+                try {
+                    // Variante 1: getCovidfechahora()
+                    Object fh = SaludNivCovid.getClass().getMethod("getCovidfechahora").invoke(SaludNivCovid);
+                    if (fh instanceof Timestamp) fecha = ((Timestamp) fh).toLocalDateTime();
+                    else if (fh instanceof Date) fecha = LocalDateTime.ofInstant(((Date) fh).toInstant(), ZoneId.systemDefault());
+                } catch (NoSuchMethodException nsme) {
+                    try {
+                        // Variante 2: getCovidFechaHora()
+                        Object fh = SaludNivCovid.getClass().getMethod("getCovidFechaHora").invoke(SaludNivCovid);
+                        if (fh instanceof Timestamp) fecha = ((Timestamp) fh).toLocalDateTime();
+                        else if (fh instanceof Date) fecha = LocalDateTime.ofInstant(((Date) fh).toInstant(), ZoneId.systemDefault());
+                    } catch (Exception ignore) { /* se queda fecha = now */ }
+                }
+
+                // 3) Lectura de valores (nombres más usados en tu código base)
+                Double temp = null;
+                Integer spo2 = null;
+                Integer pulso = null;
+
+                try {
+                    Object v = SaludNivCovid.getClass().getMethod("getCovidtempmedida").invoke(SaludNivCovid);
+                    if (v instanceof Number) temp = ((Number) v).doubleValue();
+                } catch (NoSuchMethodException ignore) {
+                    // alternativa camelCase
+                    try {
+                        Object v = SaludNivCovid.getClass().getMethod("getCovidTempMedida").invoke(SaludNivCovid);
+                        if (v instanceof Number) temp = ((Number) v).doubleValue();
+                    } catch (Exception ignore2) {}
+                }
+
+                try {
+                    Object v = SaludNivCovid.getClass().getMethod("getCovidspomedida").invoke(SaludNivCovid);
+                    if (v instanceof Number) spo2 = ((Number) v).intValue();
+                } catch (NoSuchMethodException ignore) {
+                    try {
+                        Object v = SaludNivCovid.getClass().getMethod("getCovidSpoMedida").invoke(SaludNivCovid);
+                        if (v instanceof Number) spo2 = ((Number) v).intValue();
+                    } catch (Exception ignore2) {}
+                }
+
+                try {
+                    Object v = SaludNivCovid.getClass().getMethod("getCovidpulsomedida").invoke(SaludNivCovid);
+                    if (v instanceof Number) pulso = ((Number) v).intValue();
+                } catch (NoSuchMethodException ignore) {
+                    try {
+                        Object v = SaludNivCovid.getClass().getMethod("getCovidPulsoMedida").invoke(SaludNivCovid);
+                        if (v instanceof Number) pulso = ((Number) v).intValue();
+                    } catch (Exception ignore2) {}
+                }
+
+                // 4) Dispara evaluación (el servicio resuelve al médico por la tabla consulta)
+                telemetryAlertService.evaluarCovid(pacIdStr, temp, spo2, pulso, fecha, null);
+
+            } catch (Exception ex) {
+                logger.warn("No se pudo evaluar/emitir alerta COVID.", ex);
+            }
+
         } catch (DataIntegrityViolationException dive) {
             SaludNivCovidException ncE = new SaludNivCovidException("No fue posible editar Niveles Covid", SaludNivCovidException.LAYER_DAO, SaludNivCovidException.ACTION_UPDATE);
             ncE.addError("Ocurrió un error al editar Niveles Covid");

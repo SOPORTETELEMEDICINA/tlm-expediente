@@ -23,6 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.criteria.Predicate;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
 
 @Service
 @Transactional(readOnly = true)
@@ -53,6 +56,12 @@ public class SaludNivPreartServiceImpl implements SaludNivPreartService {
         this.SaludNivPreartConverter = SaludNivPreartConverter;
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private net.amentum.niomedic.expediente.persistence.SaludIndPaRepository indPaRepo;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private net.amentum.niomedic.expediente.service.notifications.TelemetryAlertService telemetryAlertService;
+
     @Transactional(readOnly = false, rollbackFor = {SaludNivPreartException.class})
     @Override
     public void createSaludNivPreart(SaludNivPreartView SaludNivPreartView) throws SaludNivPreartException {
@@ -60,6 +69,49 @@ public class SaludNivPreartServiceImpl implements SaludNivPreartService {
             SaludNivPreart SaludNivPreart = SaludNivPreartConverter.toEntity(SaludNivPreartView, new SaludNivPreart(), Boolean.FALSE);
             logger.debug("Insertar nuevo Niveles Presion Arterial: {}", SaludNivPreart);
             SaludNivPreartRepository.save(SaludNivPreart);
+            // === ALERTA TELEMETRÍA: PRESIÓN ARTERIAL ===
+            try {
+                // 1) Paciente (VARCHAR en BD)
+                final String pacIdStr = SaludNivPreart.getPacidfk();
+
+                // 2) Fecha/hora del registro (campo: pafechahora)
+                final java.sql.Timestamp fechaMedicion = SaludNivPreart.getPafechahora();
+                final LocalDateTime fecha = (fechaMedicion != null)
+                        ? fechaMedicion.toLocalDateTime()
+                        : LocalDateTime.now();
+
+                // 3) Valores sistólica/diastólica
+                final Integer sys = (SaludNivPreart.getPasysmedida() != null)
+                        ? SaludNivPreart.getPasysmedida().intValue()
+                        : null;
+                final Integer dia = (SaludNivPreart.getPadiamedida() != null)
+                        ? SaludNivPreart.getPadiamedida().intValue()
+                        : null;
+
+                // 4) Umbrales desde la última indicación del paciente
+                final Integer[] aBajaSys = {null}, aBajaDia = {null}, uAltaSys = {null}, uAltaDia = {null};
+
+                indPaRepo.findUltimaPorPaciente(pacIdStr).ifPresent(ip -> {
+                    aBajaSys[0] = ip.getAlertabajasys();
+                    aBajaDia[0] = ip.getAlertabajadia();
+                    uAltaSys[0] = ip.getUrgenciaaltasys();
+                    uAltaDia[0] = ip.getUrgenciaaltadia();
+                });
+
+                // 5) Evaluar y notificar (el servicio resuelve el médico automáticamente)
+                telemetryAlertService.evaluarPresion(
+                        pacIdStr,
+                        sys, dia,
+                        aBajaSys[0], aBajaDia[0],
+                        uAltaSys[0], uAltaDia[0],
+                        fecha,
+                        null // idGroup opcional
+                );
+
+            } catch (Exception ex) {
+                logger.warn("No se pudo evaluar/emitir alerta PRESION.", ex);
+            }
+
         } catch (DataIntegrityViolationException dive) {
             SaludNivPreartException ncE = new SaludNivPreartException("No fue posible agregar Niveles Presion Arterial", SaludNivPreartException.LAYER_DAO, SaludNivPreartException.ACTION_INSERT);
             ncE.addError("Ocurrio un error al agregar Niveles Presion Arterial");
@@ -86,6 +138,49 @@ public class SaludNivPreartServiceImpl implements SaludNivPreartService {
             SaludNivPreart = SaludNivPreartConverter.toEntity(SaludNivPreartView, SaludNivPreart, Boolean.TRUE);
             logger.debug("Editar Niveles Presion Arterial: {}", SaludNivPreart);
             SaludNivPreartRepository.save(SaludNivPreart);
+            // === ALERTA TELEMETRÍA: PRESIÓN ARTERIAL ===
+            try {
+                // 1) Paciente (VARCHAR en BD)
+                final String pacIdStr = SaludNivPreart.getPacidfk();
+
+                // 2) Fecha/hora del registro (campo: pafechahora)
+                final java.sql.Timestamp fechaMedicion = SaludNivPreart.getPafechahora();
+                final LocalDateTime fecha = (fechaMedicion != null)
+                        ? fechaMedicion.toLocalDateTime()
+                        : LocalDateTime.now();
+
+                // 3) Valores sistólica/diastólica
+                final Integer sys = (SaludNivPreart.getPasysmedida() != null)
+                        ? SaludNivPreart.getPasysmedida().intValue()
+                        : null;
+                final Integer dia = (SaludNivPreart.getPadiamedida() != null)
+                        ? SaludNivPreart.getPadiamedida().intValue()
+                        : null;
+
+                // 4) Umbrales desde la última indicación del paciente
+                final Integer[] aBajaSys = {null}, aBajaDia = {null}, uAltaSys = {null}, uAltaDia = {null};
+
+                indPaRepo.findUltimaPorPaciente(pacIdStr).ifPresent(ip -> {
+                    aBajaSys[0] = ip.getAlertabajasys();
+                    aBajaDia[0] = ip.getAlertabajadia();
+                    uAltaSys[0] = ip.getUrgenciaaltasys();
+                    uAltaDia[0] = ip.getUrgenciaaltadia();
+                });
+
+                // 5) Evaluar y notificar (el servicio resuelve el médico automáticamente)
+                telemetryAlertService.evaluarPresion(
+                        pacIdStr,
+                        sys, dia,
+                        aBajaSys[0], aBajaDia[0],
+                        uAltaSys[0], uAltaDia[0],
+                        fecha,
+                        null // idGroup opcional
+                );
+
+            } catch (Exception ex) {
+                logger.warn("No se pudo evaluar/emitir alerta PRESION.", ex);
+            }
+
         } catch (DataIntegrityViolationException dive) {
             SaludNivPreartException ncE = new SaludNivPreartException("No fue posible editar Niveles Presion Arterial", SaludNivPreartException.LAYER_DAO, SaludNivPreartException.ACTION_UPDATE);
             ncE.addError("Ocurrió un error al editar Niveles Presion Arterial");

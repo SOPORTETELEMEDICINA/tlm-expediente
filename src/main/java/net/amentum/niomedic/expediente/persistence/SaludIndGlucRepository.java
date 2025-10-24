@@ -4,6 +4,10 @@ import net.amentum.niomedic.expediente.model.SaludIndGluc;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import java.util.Optional;
+
 
 import java.util.List;
 
@@ -137,4 +141,16 @@ public interface SaludIndGlucRepository extends JpaRepository<SaludIndGluc, Long
        List<SaludIndGluc> findByGlu6do(Boolean glu6do);
        List<SaludIndGluc> findByGlu7do(Boolean glu7do);
        List<SaludIndGluc> findByGlu8do(Boolean glu8do);
+
+    @org.springframework.data.jpa.repository.Query(
+            value = "SELECT * FROM salud_indicaciones_gluc " +
+                    "WHERE pac_id_fk = :pacId " +
+                    "ORDER BY id_indic DESC " +
+                    "LIMIT 1",
+            nativeQuery = true
+    )
+    java.util.Optional<net.amentum.niomedic.expediente.model.SaludIndGluc> findUltimaPorPaciente(
+            @org.springframework.data.repository.query.Param("pacId") String pacId
+    );
+
 }

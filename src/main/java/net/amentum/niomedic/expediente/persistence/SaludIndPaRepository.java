@@ -4,6 +4,10 @@ import net.amentum.niomedic.expediente.model.SaludIndPa;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import java.util.Optional;
+
 
 import java.util.List;
 
@@ -124,4 +128,12 @@ public interface SaludIndPaRepository extends JpaRepository<SaludIndPa, Long>, J
     List<SaludIndPa> findBySys5do(Boolean param);
     List<SaludIndPa> findBySys6do(Boolean param);
     List<SaludIndPa> findBySys7do(Boolean param);
+
+    @Query(value = "SELECT * FROM salud_indicaciones_pa " +
+            "WHERE pac_id_fk = :pacId " +
+            "ORDER BY id_indic DESC " +
+            "LIMIT 1",
+            nativeQuery = true)
+    Optional<net.amentum.niomedic.expediente.model.SaludIndPa> findUltimaPorPaciente(@Param("pacId") String pacId);
+
 }
