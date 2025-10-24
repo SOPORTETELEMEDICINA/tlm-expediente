@@ -5,6 +5,8 @@ import net.amentum.niomedic.expediente.persistence.AlertaNotificacionRepository;
 import net.amentum.niomedic.expediente.service.AlertaNotificacionService;
 import net.amentum.niomedic.expediente.views.AlertaNotificacionCreateView;
 import net.amentum.niomedic.expediente.views.AlertaNotificacionView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +16,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class AlertaNotificacionServiceImpl implements AlertaNotificacionService {
+
+    private static final Logger log = LoggerFactory.getLogger(AlertaNotificacionServiceImpl.class);
 
     private final AlertaNotificacionRepository repo;
 
@@ -32,16 +36,18 @@ public class AlertaNotificacionServiceImpl implements AlertaNotificacionService 
         n.setMensaje(v.mensaje);
         n.setIdGroup(v.idGroup);
         n = repo.save(n);
+        log.debug("AlertaNotificacion creada id={}", n.getId());
         return toView(n);
     }
 
     @Override
     @Transactional
     public void markAsSeen(Long id) {
-        repo.findById(id).ifPresent(n -> {
+        AlertaNotificacion n = repo.findOne(id); // <-- Spring Data < 2.0
+        if (n != null) {
             n.setEstatus("VISTO");
             repo.save(n);
-        });
+        }
     }
 
     @Override
