@@ -5,12 +5,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.UUID;
 
 @Repository
 public interface AlertaNotificacionRepository extends JpaRepository<AlertaNotificacion, Long> {
 
-    List<AlertaNotificacion> findTop20ByIdMedicoAndEstatusOrderByFechaCreacionDesc(UUID idMedico, String estatus);
+    List<AlertaNotificacion> findTop20ByIdMedicoAndEstatusOrderByFechaCreacionDesc(String idMedico, String estatus);
 
-    long countByIdMedicoAndEstatus(UUID idMedico, String estatus);
+    long countByIdMedicoAndEstatus(String idMedico, String estatus);
 }

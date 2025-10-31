@@ -34,7 +34,10 @@ public class TelemetryAlertServiceImpl implements TelemetryAlertService {
                                Integer urgBaja, Integer alertaAlta, Integer urgAlta,
                                LocalDateTime fecha, Integer idGroup) {
         UUID idMedico = medicoAsignadoService.obtenerUltimoMedicoDelPaciente(pacIdStr);
-        if (idMedico == null) { log.debug("Sin médico asignado para {}", pacIdStr); return; }
+        if (idMedico == null) {
+            log.debug("Sin médico asignado para {}", pacIdStr);
+            return;
+        }
 
         String sev = null;
         if (urgBaja != null && valor <= urgBaja) sev = "URGENCIA_BAJA";
@@ -43,7 +46,7 @@ public class TelemetryAlertServiceImpl implements TelemetryAlertService {
 
         if (sev != null) {
             String msg = "Glucosa " + valor + " (" + sev + ") " + fecha;
-            emitir(idMedico, pacIdStr, "GLUCOSA", sev, msg, fecha, idGroup);
+            emitir(idMedico.toString(), pacIdStr, "GLUCOSA", sev, msg, fecha, idGroup);
         }
     }
 
@@ -53,27 +56,27 @@ public class TelemetryAlertServiceImpl implements TelemetryAlertService {
                                Integer urgAltaSys, Integer urgAltaDia,
                                LocalDateTime fecha, Integer idGroup) {
         UUID idMedico = medicoAsignadoService.obtenerUltimoMedicoDelPaciente(pacIdStr);
-        if (idMedico == null) { log.debug("Sin médico asignado para {}", pacIdStr); return; }
+        if (idMedico == null) {
+            log.debug("Sin médico asignado para {}", pacIdStr);
+            return;
+        }
 
         String sev = null;
-        // URGENCIA ALTA si cualquiera supera el umbral alto
         if ((urgAltaSys != null && sys != null && sys >= urgAltaSys) ||
                 (urgAltaDia != null && dia != null && dia >= urgAltaDia)) {
             sev = "URGENCIA_ALTA";
         }
-        // URGENCIA BAJA si cualquiera está por debajo del umbral bajo
         else if ((alertaBajaSys != null && sys != null && sys <= alertaBajaSys) ||
                 (alertaBajaDia != null && dia != null && dia <= alertaBajaDia)) {
             sev = "URGENCIA_BAJA";
         }
-        // No hay ALERTA_ALTA en PA (tu tabla no la maneja)
 
         if (sev != null) {
             StringBuilder val = new StringBuilder("PA ");
             if (sys != null) val.append(sys);
             if (dia != null) val.append("/").append(dia);
             String msg = val + " (" + sev + ") " + fecha;
-            emitir(idMedico, pacIdStr, "PRESION", sev, msg, fecha, idGroup);
+            emitir(idMedico.toString(), pacIdStr, "PRESION", sev, msg, fecha, idGroup);
         }
     }
 
@@ -81,30 +84,36 @@ public class TelemetryAlertServiceImpl implements TelemetryAlertService {
     public void evaluarCovid(String pacIdStr, Double temp, Integer spo2, Integer pulso,
                              LocalDateTime fecha, Integer idGroup) {
         UUID idMedico = medicoAsignadoService.obtenerUltimoMedicoDelPaciente(pacIdStr);
-        if (idMedico == null) { log.debug("Sin médico asignado para {}", pacIdStr); return; }
+        if (idMedico == null) {
+            log.debug("Sin médico asignado para {}", pacIdStr);
+            return;
+        }
 
-        boolean alarma = false; StringBuilder sb = new StringBuilder();
+        boolean alarma = false;
+        StringBuilder sb = new StringBuilder();
         if (temp  != null && temp  >= 39.0) { alarma = true; sb.append("Temp=").append(temp).append(" "); }
         if (spo2  != null && spo2  <  90  ) { alarma = true; sb.append("SpO2=").append(spo2).append("% "); }
         if (pulso != null && pulso >= 120 ) { alarma = true; sb.append("Pulso=").append(pulso); }
 
         if (alarma) {
             String msg = "COVID fuera de rango: " + sb.toString().trim() + " " + fecha;
-            emitir(idMedico, pacIdStr, "COVID", "URGENCIA_ALTA", msg, fecha, idGroup);
+            emitir(idMedico.toString(), pacIdStr, "COVID", "URGENCIA_ALTA", msg, fecha, idGroup);
         }
     }
 
-    private void emitir(UUID idMedico, String pacIdStr, String tipo, String sev,
+    private void emitir(String idMedico, String pacIdStr, String tipo, String sev,
                         String msg, LocalDateTime fecha, Integer idGroup) {
         AlertaNotificacionCreateView c = new AlertaNotificacionCreateView();
         c.idMedico = idMedico;
-        c.idPaciente = UUID.fromString(pacIdStr);
+        c.idPaciente = pacIdStr;
         c.tipoNotificacion = tipo;
         c.severidad = sev;
         c.mensaje = msg;
         c.idGroup = idGroup;
 
         AlertaNotificacionView v = notiService.createAndReturn(c);
+        log.info("Alerta de {} emitida para paciente: {}", tipo, pacIdStr);
+
         try {
             pushGateway.push(v);
         } catch (Exception ex) {

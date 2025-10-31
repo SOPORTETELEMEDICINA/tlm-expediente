@@ -17,26 +17,27 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @EnableDiscoveryClient
 public class ExpedienteApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(ExpedienteApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(ExpedienteApplication.class, args);
+    }
 
-		@Bean
-	public Docket docket(){
-		return new Docket(DocumentationType.SWAGGER_2)
-				.apiInfo(apiInfo())
-				.select()
-				.apis(RequestHandlerSelectors.basePackage("net.amentum.niomedic.expediente"))
-				.paths(PathSelectors.any())
-				.build();
-	}
+    @Bean
+    public Docket docket(){
+        return new Docket(DocumentationType.SWAGGER_2)
+                .apiInfo(apiInfo())
+                .select()
+                .apis(RequestHandlerSelectors.basePackage("net.amentum.niomedic.expediente.rest"))
+                .paths(PathSelectors.any())
+                .build()
+                .useDefaultResponseMessages(false);
+    }
 
-	public ApiInfo apiInfo(){
-	return new ApiInfoBuilder()
-			.title("Microservicio de expedientes")
-			.description("Alta, Baja, Edicion de expedientes")
-			.contact("Amentum IT Services")
-			.licenseUrl("http://www.amentum.net")
-			.build();
-}
+    public ApiInfo apiInfo(){
+        return new ApiInfoBuilder()
+                .title("Microservicio de expedientes")
+                .description("Alta, Baja, Edicion de expedientes")
+                .contact("Amentum IT Services")
+                .licenseUrl("http://www.amentum.net")
+                .build();
+    }
 }

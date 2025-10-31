@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,6 +35,9 @@ public class AlertaNotificacionServiceImpl implements AlertaNotificacionService 
         n.setSeveridad(v.severidad);
         n.setMensaje(v.mensaje);
         n.setIdGroup(v.idGroup);
+        n.setFechaCreacion(new Timestamp(System.currentTimeMillis()));
+        n.setEstatus("ACTIVA");
+
         n = repo.save(n);
         log.debug("AlertaNotificacion creada id={}", n.getId());
         return toView(n);
@@ -43,7 +46,7 @@ public class AlertaNotificacionServiceImpl implements AlertaNotificacionService 
     @Override
     @Transactional
     public void markAsSeen(Long id) {
-        AlertaNotificacion n = repo.findOne(id); // <-- Spring Data < 2.0
+        AlertaNotificacion n = repo.findOne(id);
         if (n != null) {
             n.setEstatus("VISTO");
             repo.save(n);
@@ -52,14 +55,14 @@ public class AlertaNotificacionServiceImpl implements AlertaNotificacionService 
 
     @Override
     @Transactional(readOnly = true)
-    public List<AlertaNotificacionView> listActivas(UUID idMedico) {
+    public List<AlertaNotificacionView> listActivas(String idMedico) {
         return repo.findTop20ByIdMedicoAndEstatusOrderByFechaCreacionDesc(idMedico, "ACTIVA")
                 .stream().map(this::toView).collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long countActivas(UUID idMedico) {
+    public long countActivas(String idMedico) {
         return repo.countByIdMedicoAndEstatus(idMedico, "ACTIVA");
     }
 

@@ -6,7 +6,6 @@ import net.amentum.niomedic.expediente.views.AlertaNotificacionView;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/alertas/notificaciones")
@@ -29,12 +28,12 @@ public class AlertaNotificacionRest {
     }
 
     @GetMapping("/activas/{idMedico}")
-    public List<AlertaNotificacionView> listActivas(@PathVariable("idMedico") UUID idMedico) {
+    public List<AlertaNotificacionView> listActivas(@PathVariable("idMedico") String idMedico) {
         return service.listActivas(idMedico);
     }
 
     @GetMapping("/activas/{idMedico}/count")
-    public long countActivas(@PathVariable("idMedico") UUID idMedico) {
+    public long countActivas(@PathVariable("idMedico") String idMedico) {
         return service.countActivas(idMedico);
     }
 }
