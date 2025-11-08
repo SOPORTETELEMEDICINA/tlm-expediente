@@ -51,7 +51,7 @@ public class TelemetryAlertServiceImpl implements TelemetryAlertService {
         else if (urgAlta != null && valor >= urgAlta) sev = "URGENCIA_ALTA";
 
         if (sev != null) {
-            String msg = "Glucosa " + valor + " (" + sev + ") " + fecha;
+            String msg = "Glucosa " + valor + " (" + sev + ") ";
             emitir(idMedico.toString(), pacIdStr, "GLUCOSA", sev, msg, fecha, idGrupo);
         }
     }
@@ -87,7 +87,7 @@ public class TelemetryAlertServiceImpl implements TelemetryAlertService {
             StringBuilder val = new StringBuilder("PA ");
             if (sys != null) val.append(sys);
             if (dia != null) val.append("/").append(dia);
-            String msg = val + " (" + sev + ") " + fecha;
+            String msg = val + " (" + sev + ") ";
             emitir(idMedico.toString(), pacIdStr, "PRESION", sev, msg, fecha, idGrupo);
         }
     }
@@ -115,7 +115,7 @@ public class TelemetryAlertServiceImpl implements TelemetryAlertService {
         if (pulso != null && pulso >= 120 ) { alarma = true; sb.append("Pulso=").append(pulso); }
 
         if (alarma) {
-            String msg = "COVID fuera de rango: " + sb.toString().trim() + " " + fecha;
+            String msg = "COVID fuera de rango: " + sb.toString().trim();
             emitir(idMedico.toString(), pacIdStr, "COVID", "URGENCIA_ALTA", msg, fecha, idGrupo);
         }
     }
