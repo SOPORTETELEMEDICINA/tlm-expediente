@@ -10,4 +10,7 @@ public interface AlertaNotificacionService {
     void markAsSeen(Long id);
     List<AlertaNotificacionView> listActivas(String idMedico);
     long countActivas(String idMedico);
+    List<AlertaNotificacionView> listActivasPorGrupo(Integer idGroup);
+    long countActivasPorGrupo(Integer idGroup);
+
 }

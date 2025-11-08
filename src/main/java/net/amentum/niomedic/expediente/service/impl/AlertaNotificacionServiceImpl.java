@@ -53,17 +53,34 @@ public class AlertaNotificacionServiceImpl implements AlertaNotificacionService 
         }
     }
 
+    // === Activas por MÉDICO (sin límite) ===
     @Override
     @Transactional(readOnly = true)
     public List<AlertaNotificacionView> listActivas(String idMedico) {
-        return repo.findTop20ByIdMedicoAndEstatusOrderByFechaCreacionDesc(idMedico, "ACTIVA")
-                .stream().map(this::toView).collect(Collectors.toList());
+        return repo.findByIdMedicoAndEstatusOrderByFechaCreacionDesc(idMedico, "ACTIVA")
+                .stream()
+                .map(this::toView)
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public long countActivas(String idMedico) {
         return repo.countByIdMedicoAndEstatus(idMedico, "ACTIVA");
+    }
+
+    // === Activas por GRUPO ===
+    @Transactional(readOnly = true)
+    public List<AlertaNotificacionView> listActivasPorGrupo(Integer idGroup) {
+        return repo.findByIdGroupAndEstatusOrderByFechaCreacionDesc(idGroup, "ACTIVA")
+                .stream()
+                .map(this::toView)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public long countActivasPorGrupo(Integer idGroup) {
+        return repo.countByIdGroupAndEstatus(idGroup, "ACTIVA");
     }
 
     private AlertaNotificacionView toView(AlertaNotificacion n) {
@@ -76,6 +93,7 @@ public class AlertaNotificacionServiceImpl implements AlertaNotificacionService 
         v.mensaje = n.getMensaje();
         v.fechaCreacion = n.getFechaCreacion();
         v.estatus = n.getEstatus();
+        v.idGroup = n.getIdGroup();
         return v;
     }
 }

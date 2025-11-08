@@ -2,11 +2,14 @@ package net.amentum.niomedic.expediente.service.impl;
 
 import java.util.UUID;
 
+import net.amentum.niomedic.expediente.model.Consulta;
 import net.amentum.niomedic.expediente.persistence.ConsultaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import net.amentum.niomedic.expediente.service.MedicoAsignadoService;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @Service
 public class MedicoAsignadoServiceImpl implements MedicoAsignadoService {
@@ -39,6 +42,36 @@ public class MedicoAsignadoServiceImpl implements MedicoAsignadoService {
 
         } catch (Exception ex) {
             log.warn("No se pudo obtener último médico de paciente {}: {}", pacIdStr, ex.getMessage());
+            return null;
+        }
+    }
+
+    @Override
+    public Integer obtenerUltimoGrupoDelPaciente(String pacIdStr) {
+        try {
+            if (pacIdStr == null || pacIdStr.trim().isEmpty()) {
+                log.warn("pacIdStr es nulo o vacío");
+                return null;
+            }
+
+            UUID pacId;
+            try {
+                pacId = UUID.fromString(pacIdStr);
+            } catch (IllegalArgumentException iae) {
+                log.warn("El pacIdStr no es un UUID válido: {}", pacIdStr);
+                return null;
+            }
+
+            // ✅ Compatible con Spring Boot 1.x y Java 8
+            Pageable page = new PageRequest(0, 1); // LIMIT 1
+            return consultaRepository
+                    .findUltimoGrupoPorPaciente(pacId, page)
+                    .stream()
+                    .findFirst()
+                    .orElse(null);
+
+        } catch (Exception ex) {
+            log.warn("No se pudo obtener último grupo de paciente {}: {}", pacIdStr, ex.getMessage());
             return null;
         }
     }

@@ -36,4 +36,16 @@ public class AlertaNotificacionRest {
     public long countActivas(@PathVariable("idMedico") String idMedico) {
         return service.countActivas(idMedico);
     }
+
+    @GetMapping("/activas/group/{idGroup}")
+    public List<AlertaNotificacionView> listActivasPorGrupo(@PathVariable("idGroup") Integer idGroup) {
+        return service.listActivasPorGrupo(idGroup);
+    }
+
+    @GetMapping("/activas/group/{idGroup}/count")
+    public long countActivasPorGrupo(@PathVariable("idGroup") Integer idGroup) {
+        return service.countActivasPorGrupo(idGroup);
+    }
+
+
 }

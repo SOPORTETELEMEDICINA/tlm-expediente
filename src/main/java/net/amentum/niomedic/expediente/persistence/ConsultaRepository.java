@@ -69,4 +69,11 @@ public interface ConsultaRepository extends JpaRepository<Consulta, Long>, JpaSp
             "WHERE c.idPaciente = :pacId " +
             "ORDER BY c.fechaConsulta DESC, c.idConsulta DESC")
     Optional<UUID> findUltimoMedicoPorPaciente(@Param("pacId") UUID pacId);
+
+    @Query("SELECT c.idGroup FROM Consulta c " +
+            "WHERE c.idPaciente = :pacId AND c.idGroup IS NOT NULL " +
+            "ORDER BY c.fechaConsulta DESC, c.idConsulta DESC")
+    List<Integer> findUltimoGrupoPorPaciente(@Param("pacId") UUID pacId,
+                                             org.springframework.data.domain.Pageable pageable);
+
 }

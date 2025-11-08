@@ -9,7 +9,13 @@ import java.util.List;
 @Repository
 public interface AlertaNotificacionRepository extends JpaRepository<AlertaNotificacion, Long> {
 
-    List<AlertaNotificacion> findTop20ByIdMedicoAndEstatusOrderByFechaCreacionDesc(String idMedico, String estatus);
+    // A) TODAS las activas por MÉDICO (sin límite)
+    List<AlertaNotificacion> findByIdMedicoAndEstatusOrderByFechaCreacionDesc(String idMedico, String estatus);
 
     long countByIdMedicoAndEstatus(String idMedico, String estatus);
+
+    // B) NUEVO: TODAS las activas por GRUPO
+    List<AlertaNotificacion> findByIdGroupAndEstatusOrderByFechaCreacionDesc(Integer idGroup, String estatus);
+
+    long countByIdGroupAndEstatus(Integer idGroup, String estatus);
 }

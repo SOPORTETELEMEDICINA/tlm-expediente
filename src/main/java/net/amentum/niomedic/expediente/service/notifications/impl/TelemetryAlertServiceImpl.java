@@ -39,6 +39,12 @@ public class TelemetryAlertServiceImpl implements TelemetryAlertService {
             return;
         }
 
+        Integer idGrupo = medicoAsignadoService.obtenerUltimoGrupoDelPaciente(pacIdStr);
+        if (idGrupo == null) {
+            log.debug("Sin grupo asignado para {}", pacIdStr);
+        }
+        log.info("Médico asignado: {}, Grupo asignado: {}", idMedico, idGrupo);
+
         String sev = null;
         if (urgBaja != null && valor <= urgBaja) sev = "URGENCIA_BAJA";
         else if (alertaAlta != null && urgAlta != null && valor >= alertaAlta && valor < urgAlta) sev = "ALERTA_ALTA";
@@ -46,7 +52,7 @@ public class TelemetryAlertServiceImpl implements TelemetryAlertService {
 
         if (sev != null) {
             String msg = "Glucosa " + valor + " (" + sev + ") " + fecha;
-            emitir(idMedico.toString(), pacIdStr, "GLUCOSA", sev, msg, fecha, idGroup);
+            emitir(idMedico.toString(), pacIdStr, "GLUCOSA", sev, msg, fecha, idGrupo);
         }
     }
 
@@ -60,6 +66,12 @@ public class TelemetryAlertServiceImpl implements TelemetryAlertService {
             log.debug("Sin médico asignado para {}", pacIdStr);
             return;
         }
+
+        Integer idGrupo = medicoAsignadoService.obtenerUltimoGrupoDelPaciente(pacIdStr);
+        if (idGrupo == null) {
+            log.debug("Sin grupo asignado para {}", pacIdStr);
+        }
+        log.info("Médico asignado: {}, Grupo asignado: {}", idMedico, idGrupo);
 
         String sev = null;
         if ((urgAltaSys != null && sys != null && sys >= urgAltaSys) ||
@@ -76,7 +88,7 @@ public class TelemetryAlertServiceImpl implements TelemetryAlertService {
             if (sys != null) val.append(sys);
             if (dia != null) val.append("/").append(dia);
             String msg = val + " (" + sev + ") " + fecha;
-            emitir(idMedico.toString(), pacIdStr, "PRESION", sev, msg, fecha, idGroup);
+            emitir(idMedico.toString(), pacIdStr, "PRESION", sev, msg, fecha, idGrupo);
         }
     }
 
@@ -89,6 +101,13 @@ public class TelemetryAlertServiceImpl implements TelemetryAlertService {
             return;
         }
 
+        Integer idGrupo = medicoAsignadoService.obtenerUltimoGrupoDelPaciente(pacIdStr);
+        if (idGrupo == null) {
+            log.debug("Sin grupo asignado para {}", pacIdStr);
+        }
+
+        log.info("Médico asignado: {}, Grupo asignado: {}", idMedico, idGrupo);
+
         boolean alarma = false;
         StringBuilder sb = new StringBuilder();
         if (temp  != null && temp  >= 39.0) { alarma = true; sb.append("Temp=").append(temp).append(" "); }
@@ -97,7 +116,7 @@ public class TelemetryAlertServiceImpl implements TelemetryAlertService {
 
         if (alarma) {
             String msg = "COVID fuera de rango: " + sb.toString().trim() + " " + fecha;
-            emitir(idMedico.toString(), pacIdStr, "COVID", "URGENCIA_ALTA", msg, fecha, idGroup);
+            emitir(idMedico.toString(), pacIdStr, "COVID", "URGENCIA_ALTA", msg, fecha, idGrupo);
         }
     }
 

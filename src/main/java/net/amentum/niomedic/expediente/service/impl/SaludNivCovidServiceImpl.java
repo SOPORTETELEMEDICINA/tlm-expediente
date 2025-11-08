@@ -81,7 +81,7 @@ public class SaludNivCovidServiceImpl implements SaludNivCovidService {
             logger.debug("Insertar nuevo Niveles Covid: {}", SaludNivCovid);
             SaludNivCovidRepository.save(SaludNivCovid);
             // === ALERTA TELEMETRÍA: COVID ===
-// Reglas fijas: temp >= 39  |  SpO2 < 90  |  pulso >= 120
+            // Reglas fijas: temp >= 39  |  SpO2 < 90  |  pulso >= 120
             try {
                 // 1) Paciente (VARCHAR en BD)
                 final String pacIdStr = SaludNivCovid.getPacidfk();
